@@ -12,7 +12,6 @@ function python_version() {
 
 function if_python_module() {
     # Return 1 if the module (name as argument) is installed in the current
-    # Python environment, 0 otherwise
     python -c "import pkgutil; print(1 if pkgutil.find_loader(\"$1\") else 0)"
 }
 
@@ -127,4 +126,3 @@ fi
 if [[ $? == 0 ]]; then
     source ${gotmwork_env_file}
 fi
-

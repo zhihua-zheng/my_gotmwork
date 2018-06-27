@@ -12,10 +12,44 @@ case ${turbmethod} in
         ${cmd_nmlchange} -f gotmturb.nml -e len_scale_method -v 9
         ${cmd_nmlchange} -f gotmturb.nml -e scnd_coeff -v 3
         ;;
+    "SMC_epsilon")
+        ${cmd_nmlchange} -f gotmturb.nml -e turb_method -v 3
+        ${cmd_nmlchange} -f gotmturb.nml -e tke_method -v 3
+        ${cmd_nmlchange} -f gotmturb.nml -e len_scale_method -v 8
+        ${cmd_nmlchange} -f gotmturb.nml -e scnd_coeff -v 3
+        ;;
+    "SMC_GLS")
+        ${cmd_nmlchange} -f gotmturb.nml -e turb_method -v 3
+        ${cmd_nmlchange} -f gotmturb.nml -e tke_method -v 3
+        ${cmd_nmlchange} -f gotmturb.nml -e len_scale_method -v 10
+        ${cmd_nmlchange} -f gotmturb.nml -e scnd_coeff -v 3
+        ;;
     "SMCLT")
         ${cmd_nmlchange} -f gotmturb.nml -e turb_method -v 3
         ${cmd_nmlchange} -f gotmturb.nml -e tke_method -v 4
         ${cmd_nmlchange} -f gotmturb.nml -e len_scale_method -v 11
+        ${cmd_nmlchange} -f gotmturb.nml -e e3 -v 5.0
+        ${cmd_nmlchange} -f gotmturb.nml -e e6 -v 6.0
+        ${cmd_nmlchange} -f gotmturb.nml -e scnd_method  -v 4
+        ${cmd_nmlchange} -f gotmturb.nml -e scnd_coeff -v 3
+        ${cmd_nmlchange} -f gotmturb.nml -e length_lim -v .true.
+        ${cmd_nmlchange} -f gotmmean.nml -e stokes_coriolis -v .true.
+        ;;
+    "SMCLT_epsilon")
+        ${cmd_nmlchange} -f gotmturb.nml -e turb_method -v 3
+        ${cmd_nmlchange} -f gotmturb.nml -e tke_method -v 4
+        ${cmd_nmlchange} -f gotmturb.nml -e len_scale_method -v 8
+        ${cmd_nmlchange} -f gotmturb.nml -e e3 -v 5.0
+        ${cmd_nmlchange} -f gotmturb.nml -e e6 -v 6.0
+        ${cmd_nmlchange} -f gotmturb.nml -e scnd_method  -v 4
+        ${cmd_nmlchange} -f gotmturb.nml -e scnd_coeff -v 3
+        ${cmd_nmlchange} -f gotmturb.nml -e length_lim -v .true.
+        ${cmd_nmlchange} -f gotmmean.nml -e stokes_coriolis -v .true.
+        ;;
+    "SMCLT_GLS")
+        ${cmd_nmlchange} -f gotmturb.nml -e turb_method -v 3
+        ${cmd_nmlchange} -f gotmturb.nml -e tke_method -v 4
+        ${cmd_nmlchange} -f gotmturb.nml -e len_scale_method -v 10
         ${cmd_nmlchange} -f gotmturb.nml -e e3 -v 5.0
         ${cmd_nmlchange} -f gotmturb.nml -e e6 -v 6.0
         ${cmd_nmlchange} -f gotmturb.nml -e scnd_method  -v 4
@@ -75,8 +109,15 @@ case ${turbmethod} in
         ${cmd_nmlchange} -f gotmmean.nml -e lagrangian_mixing -v .false.
         ${cmd_nmlchange} -f gotmmean.nml -e stokes_coriolis -v .false.
         ;;
+    "K-EPSILON")
+        ${cmd_nmlchange} -f gotmturb.nml -e turb_method -v 2
+        ${cmd_nmlchange} -f gotmturb.nml -e tke_method -v 2
+        ${cmd_nmlchange} -f gotmturb.nml -e len_scale_method -v 8
+        ${cmd_nmlchange} -f gotmturb.nml -e stab_method -v 3
+        ${cmd_nmlchange} -f gotmmean.nml -e lagrangian_mixing -v .false.
+        ${cmd_nmlchange} -f gotmmean.nml -e stokes_coriolis -v .false.
+        ;;
     *)
         echo "Turbulence method ${turbmethod} not supported. Stop."
         exit 1
 esac
-

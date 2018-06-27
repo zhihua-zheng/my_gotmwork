@@ -28,7 +28,7 @@ ddu=2
 ddl=0
 
 # run parameters
-dt=1800
+dt=900
 nsave=6
 
 # starting and ending date - in the format of YYYYMMDD
@@ -38,15 +38,20 @@ dateend="20131201"
 # name of the turbulence model
 # turbmethod="KPPLT-EFACTOR"
 # turbmethod="KPPLT-ENTR"
-turbmethod="KPP-CVMix"
-# turbmethod="SMCLT"
+# turbmethod="KPP-CVMix"
 # turbmethod="SMC"
+# turbmethod="SMC_epsilon"
+# turbmethod="SMC_GLS"
+turbmethod="SMCLT"
+# turbmethod="SMCLT_epsilon"
+# turbmethod="SMCLT_GLS"
+# turbmethod="K-EPSILON"
 
 # output file name
 outname="gotm_out"
 
 # case name
-casename="${title}_${turbmethod}_${datestart}-${dateend}"
+casename="${title}_${turbmethod}_${datestart}-${dateend}_${dt}"
 
 #######################################################################
 #                        Preprocess input data                        #
