@@ -52,7 +52,9 @@ dateend="20091231"
 # name of the turbulence model
 # turbmethod="KPPLT-ENTR"
 # turbmethod="KPP-Original"
-turbmethod="KPP-CVMix"
+# turbmethod="KPP-CVMix"
+turbmethod="SMCLT"
+
 
 # case name
 casename="${title}_LAT${lat}_LON${lon}_${turbmethod}_${datestart}-${dateend}"
@@ -139,4 +141,4 @@ fi # l_run_gotm
 #######################################################################
 
 # plot surface forcing and profiles
-source ${scpt_case_postproc}
+#source ${scpt_case_postproc}

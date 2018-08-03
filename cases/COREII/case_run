@@ -1,0 +1,96 @@
+#!/bin/bash
+# Run GOTM using preprocessed data for COREII
+# Require a base case which contains the preprocessed input data
+# and namelist, e.g., as a result of case_test
+#
+# Qing Li, 20180504
+
+#######################################################################
+#                              Set paths                              #
+#######################################################################
+
+# setup paths and tools
+source "../../set_tools.sh"
+
+
+# directory of base case
+basecase="${GOTMWORK_ROOT}/data/COREII_LAT-54_LON254_20080115-20091231"
+
+#######################################################################
+#                           Set parameters                            #
+#######################################################################
+
+# name of the dataset
+title="COREII_LAT-54_LON254"
+
+# set levels and grid zooming at surface
+nlev=500
+ddu=0
+ddl=0
+#depth=500
+
+# run parameters
+dt=1800
+#dt=60
+nsave=6
+
+# name of the turbulence model
+# turbmethod="OSMOSIS"
+# turbmethod="SMC"
+# turbmethod="KPP-CVMix"
+#turbmethod="EPBL"
+turbmethod="SMCLT"
+#turbmethod="SMCLT_noSt"
+
+# output file name
+outname="gotm_out"
+
+# starting and ending date - in the format of YYYYMMDD
+datestart="20080915"
+dateend="20090915"
+
+
+# case name
+casename="${title}_${turbmethod}_${datestart}-${dateend}"
+
+#######################################################################
+#                        Preprocess input data                        #
+#######################################################################
+
+# create run directory
+rundir="${GOTMRUN_ROOT}/${casename}"
+mkdir -p ${rundir}
+cd ${rundir}
+
+# input data and namelist
+cp ${basecase}/* ./
+
+# set run parameters
+start_time="${datestart:0:4}-${datestart:4:2}-${datestart:6:2} 00:00:00"
+stop_time="${dateend:0:4}-${dateend:4:2}-${dateend:6:2} 00:00:00"
+${cmd_nmlchange} -f gotmrun.nml -e start -v "${start_time}"
+${cmd_nmlchange} -f gotmrun.nml -e stop -v "${stop_time}"
+${cmd_nmlchange} -f gotmrun.nml -e nlev -v ${nlev}
+${cmd_nmlchange} -f gotmrun.nml -e dt -v ${dt}
+#${cmd_nmlchange} -f gotmrun.nml -e depth -v ${depth}
+
+${cmd_nmlchange} -f gotmrun.nml -e name -v ${title}
+${cmd_nmlchange} -f gotmrun.nml -e out_fn -v ${outname}
+${cmd_nmlchange} -f gotmrun.nml -e nsave -v ${nsave}
+${cmd_nmlchange} -f gotmmean.nml -e ddu -v ${ddu}
+${cmd_nmlchange} -f gotmmean.nml -e ddl -v ${ddl}
+
+# set turbulence method
+source ${scpt_case_turbmethod}
+
+#######################################################################
+#                              Run GOTM                               #
+#######################################################################
+${cmd_gotm} 2> log.${outname}
+# ${cmd_gotm} > log.${outname}
+#######################################################################
+#                           Postprocessing                            #
+#######################################################################
+
+# plot surface forcing and profiles
+#source ${scpt_case_postproc}

@@ -14,6 +14,7 @@ source "../../set_tools.sh"
 
 # directory of base case
 basecase="${GOTMWORK_ROOT}/data/OCSPapa_20120101-20131204"
+# basecase="${GOTMWORK_ROOT}/data/OSMOSIS_winter"
 
 #######################################################################
 #                           Set parameters                            #
@@ -28,7 +29,8 @@ ddu=2
 ddl=0
 
 # run parameters
-dt=900
+#dt=900
+dt=1800
 nsave=6
 
 # starting and ending date - in the format of YYYYMMDD
@@ -39,13 +41,9 @@ dateend="20131201"
 # turbmethod="KPPLT-EFACTOR"
 # turbmethod="KPPLT-ENTR"
 # turbmethod="KPP-CVMix"
-# turbmethod="SMC"
-# turbmethod="SMC_epsilon"
-# turbmethod="SMC_GLS"
-turbmethod="SMCLT"
-# turbmethod="SMCLT_epsilon"
-# turbmethod="SMCLT_GLS"
-# turbmethod="K-EPSILON"
+ turbmethod="SMC"
+# turbmethod="SMCLT"
+# turbmethod="K-EPSILON-SG"
 
 # output file name
 outname="gotm_out"
