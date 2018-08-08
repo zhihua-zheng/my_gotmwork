@@ -23,39 +23,45 @@ case ${turbmethod} in
         ${cmd_nmlchange} -f gotmturb.nml -e e6 -v 6.0
         ${cmd_nmlchange} -f gotmturb.nml -e scnd_method -v 4
         ${cmd_nmlchange} -f gotmturb.nml -e scnd_coeff -v 3
-        ${cmd_nmlchange} -f gotmturb.nml -e length_lim -v .false.
+        ${cmd_nmlchange} -f gotmturb.nml -e length_lim -v .true.
         ${cmd_nmlchange} -f gotmturb.nml -e compute_c3 -v .false.
         ${cmd_nmlchange} -f gotmmean.nml -e stokes_coriolis -v .true.
         ;;
     "KPP-CVMix")
         ${cmd_nmlchange} -f gotmturb.nml -e turb_method -v 99
-        ${cmd_nmlchange} -f kpp.nml -e lcvmix -v .true.
+        ${cmd_nmlchange} -f kpp.nml -e kpp_opt -v 1
         ${cmd_nmlchange} -f gotmmean.nml -e lagrangian_mixing -v .false.
         ${cmd_nmlchange} -f gotmmean.nml -e stokes_coriolis -v .false.
         ;;
     "KPP-GOTM")
         ${cmd_nmlchange} -f gotmturb.nml -e turb_method -v 99
-        ${cmd_nmlchange} -f kpp.nml -e lcvmix -v .false.
+        ${cmd_nmlchange} -f kpp.nml -e kpp_opt -v 0
+        ${cmd_nmlchange} -f gotmmean.nml -e lagrangian_mixing -v .false.
+        ${cmd_nmlchange} -f gotmmean.nml -e stokes_coriolis -v .false.
+        ;;
+    "KPP-ROMS")
+        ${cmd_nmlchange} -f gotmturb.nml -e turb_method -v 99
+        ${cmd_nmlchange} -f kpp.nml -e kpp_opt -v 2
         ${cmd_nmlchange} -f gotmmean.nml -e lagrangian_mixing -v .false.
         ${cmd_nmlchange} -f gotmmean.nml -e stokes_coriolis -v .false.
         ;;
     "KPPLT-EFACTOR")
         ${cmd_nmlchange} -f gotmturb.nml -e turb_method -v 99
-        ${cmd_nmlchange} -f kpp.nml -e lcvmix -v .true.
+        ${cmd_nmlchange} -f kpp.nml -e kpp_opt -v 1
         ${cmd_nmlchange} -f kpp.nml -e langmuir_method -v 1
         ${cmd_nmlchange} -f gotmmean.nml -e lagrangian_mixing -v .false.
         ${cmd_nmlchange} -f gotmmean.nml -e stokes_coriolis -v .false.
         ;;
     "KPPLT-ENTR")
         ${cmd_nmlchange} -f gotmturb.nml -e turb_method -v 99
-        ${cmd_nmlchange} -f kpp.nml -e lcvmix -v .true.
+        ${cmd_nmlchange} -f kpp.nml -e kpp_opt -v 1
         ${cmd_nmlchange} -f kpp.nml -e langmuir_method -v 2
         ${cmd_nmlchange} -f gotmmean.nml -e lagrangian_mixing -v .false.
         ${cmd_nmlchange} -f gotmmean.nml -e stokes_coriolis -v .false.
         ;;
     "KPPLT-RWHGK")
         ${cmd_nmlchange} -f gotmturb.nml -e turb_method -v 99
-        ${cmd_nmlchange} -f kpp.nml -e lcvmix -v .true.
+        ${cmd_nmlchange} -f kpp.nml -e kpp_opt -v 1
         ${cmd_nmlchange} -f kpp.nml -e langmuir_method -v 3
         ${cmd_nmlchange} -f gotmmean.nml -e lagrangian_mixing -v .true.
         ${cmd_nmlchange} -f gotmmean.nml -e stokes_coriolis -v .true.
