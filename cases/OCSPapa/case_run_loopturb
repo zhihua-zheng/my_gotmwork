@@ -1,0 +1,108 @@
+#!/bin/bash
+# Run GOTM using preprocessed data for OCS Papa
+# Require a base case which contains the preprocessed input data
+# and namelist, e.g., as a result of case_test
+#
+# Qing Li, 20180504
+
+#######################################################################
+#                              Set paths                              #
+#######################################################################
+
+# setup paths and tools
+source "../../set_tools.sh"
+
+# directory of base case
+basecase="${GOTMWORK_ROOT}/data/OCSPapa_20120101-20131204"
+
+#######################################################################
+#                           Set parameters                            #
+#######################################################################
+
+# name of the dataset
+title="OCSPapa"
+
+# closure methods list
+turb_list=("KPP-GOTM" "KPP-ROMS" "KPP-CVMix" "KPPLT-EFACTOR" "KPPLT-ENTR" \
+           "KPPLT-RWHGK" "OSMOSIS" "JHL" "EPBL" "EPBL-LT" "SMC" \
+           "SMCLT" "K-EPSILON-SG")
+
+# set levels, grid zooming at surface
+nlev=128
+ddu=2
+ddl=0
+
+# run parameters
+#dt=900
+dt=1800
+nsave=6
+
+# starting and ending date - in the format of YYYYMMDD
+datestart="20120701"
+dateend="20131201"
+
+# name of the turbulence model
+# turbmethod="KPP-GOTM"
+# turbmethod="KPP-ROMS"
+# turbmethod="KPP-CVMix"
+# turbmethod="KPPLT-EFACTOR"
+# turbmethod="KPPLT-ENTR"
+# turbmethod="KPPLT-RWHGK"
+# turbmethod="OSMOSIS"
+# turbmethod="JHL"
+# turbmethod="EPBL"
+# turbmethod="EPBL-LT"
+# turbmethod="SMC"
+# turbmethod="SMCLT"
+# turbmethod="K-EPSILON-SG"
+
+# output file name
+outname="gotm_out"
+
+#######################################################################
+#                       Loop over closure methods                     #
+#######################################################################
+
+for idx in ${turb_list[@]}; do
+    # name of the turbulence model
+    turbmethod="$idx"
+
+    # case name
+    casename="${title}_${turbmethod}_${datestart}-${dateend}_${dt}"
+
+    # create run directory
+    rundir="${GOTMRUN_ROOT}/OCSPapa/${casename}"
+    mkdir -p ${rundir}
+    cd ${rundir}
+
+    # copy base case
+    cp ${basecase}/* ./
+
+    # decompress input data
+    for f in *.gz; do
+        gunzip -f ${f}
+    done
+
+    # set run parameters
+    start_time="${datestart:0:4}-${datestart:4:2}-${datestart:6:2} 00:00:00"
+    stop_time="${dateend:0:4}-${dateend:4:2}-${dateend:6:2} 00:00:00"
+    ${cmd_nmlchange} -f gotmrun.nml -e start -v "${start_time}"
+    ${cmd_nmlchange} -f gotmrun.nml -e stop -v "${stop_time}"
+    ${cmd_nmlchange} -f gotmrun.nml -e title -v ${title}
+    ${cmd_nmlchange} -f gotmrun.nml -e out_fn -v ${outname}
+    ${cmd_nmlchange} -f gotmrun.nml -e dt -v ${dt}
+    ${cmd_nmlchange} -f gotmrun.nml -e nsave -v ${nsave}
+    ${cmd_nmlchange} -f gotmrun.nml -e nlev -v ${nlev}
+    ${cmd_nmlchange} -f gotmmean.nml -e ddu -v ${ddu}
+    ${cmd_nmlchange} -f gotmmean.nml -e ddl -v ${ddl}
+
+    # set turbulence method
+    source ${scpt_case_turbmethod}
+
+    # Run GOTM
+    ${cmd_gotm} 2> log.${outname}
+
+    # plot surface forcing and profiles
+    source ${scpt_case_postproc}
+
+done

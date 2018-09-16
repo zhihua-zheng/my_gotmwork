@@ -539,7 +539,7 @@
 !                    spectrum
 !                  3: calculated from the partitioned surface Stokes drift
 !                  4: calculated from the surface Stokes drift and penetration
-!                    depth assumingexponential profile
+!                    depth assuming exponential profile
 !                  5: calculated from the theory wave approach of Li et al.,
 !                    2017
 !                  6: calculated from the hurricane spectrum
@@ -565,4 +565,3 @@
    usp_file = '',
    usdelta_file = '',
 /
-
