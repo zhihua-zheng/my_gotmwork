@@ -1,0 +1,14 @@
+name: gotmwork-pyenv
+channels:
+    - conda-forge
+
+dependencies:
+    - python=3.6
+    - numpy
+    - jupyter
+    - matplotlib
+    - netCDF4
+    - pyferret
+    - ferret_datasets
+    - ncl
+    - basemap
