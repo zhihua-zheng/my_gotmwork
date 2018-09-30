@@ -1,0 +1,144 @@
+#!/bin/bash
+# Run GOTM using preprocessed data for OCS Papa
+# Require a base case which contains the preprocessed input data
+# and namelist, e.g., as a result of case_test
+#
+# Zhihua Zheng, Sep. 29 2018
+
+#######################################################################
+#                              Set paths                              #
+#######################################################################
+
+# setup paths and tools
+source "../../set_tools.sh"
+
+# directory of base case
+basecase="${GOTMWORK_ROOT}/data/OCSPapa_forecast"
+
+# store current exceutable path
+main_path=$(pwd)
+
+#######################################################################
+#           Grab recent forcing and update input data                 #
+#######################################################################
+
+# OCSPapa subsurface T-S profiles
+tput setaf 1; echo "I am on the way to NCL script ..."
+cd ~/Documents/GitHub/GOTM_FABM/GOTM/gotm_new_cases/Papa_forecast/
+ncl get_ocsp_ts.ncl
+
+# GFS meteorological forcing
+tput setaf 1; echo "I am on the way to MATLAB script ..."
+matlab -nodesktop -nosplash -r "cd Papa_forecast; \
+  make_forecast_forcing ${basecase}/tprof_file.dat; exit;"
+# exit MATLAB after finish
+
+# TO-DO: wave spectrum, WaveWatch III or wave buoy
+
+cd ${main_path} # back to the trail
+
+#######################################################################
+#                           Set parameters                            #
+#######################################################################
+
+# name of the dataset
+title="OCSPapa"
+
+# set levels, grid zooming at surface
+nlev=128
+ddu=2
+ddl=0
+
+# run parameters
+#dt=900
+dt=1800
+nsave=6
+
+# starting and ending date - in the format of YYYYMMDD
+line=$(awk 'FNR==1' ${basecase}/heatflux_file.dat) # first line
+date_info=$(echo ${line}| awk '{print $1}') # get the date (first field)
+datestart=$(echo ${date_info}| tr -d '-') # trim the dash
+
+line=$(tail -n 1 ${basecase}/heatflux_file.dat) # last line
+date_info=$(echo ${line}| awk '{print $1}') # get the date (first field)
+dateend=$(echo ${date_info}| tr -d '-') # trim the dash
+
+# clear variables
+unset line
+unset date_info
+
+# datestart="20180928"
+# dateend="20181002"
+
+# name of the turbulence model
+
+# turbmethod="KPP-GOTM"
+# turbmethod="KPP-ROMS"
+# turbmethod="KPP-CVMix"
+# turbmethod="KPPLT-EFACTOR"
+# turbmethod="KPPLT-ENTR"
+# turbmethod="KPPLT-RWHGK"
+# turbmethod="OSMOSIS"
+# turbmethod="JHL"
+# turbmethod="EPBL"
+# turbmethod="EPBL-LT"
+ turbmethod="SMC"
+# turbmethod="SMCLT"
+# turbmethod="K-EPSILON-SG"
+
+# output file name
+outname="gotm_out"
+
+# case name
+casename="${title}_${turbmethod}_${datestart}-${dateend}"
+
+#######################################################################
+#                        Preprocess input data                        #
+#######################################################################
+
+# check and create run directory
+rundir="${GOTMRUN_ROOT}/OCSPapa_forecast/${casename}"
+
+if [ ! -d "${rundir}" ]; then
+  mkdir -p ${rundir}  # create directory if doesn't exist
+fi
+cd ${rundir}
+
+# copy base case
+cp ${basecase}/* ./
+
+# decompress input data
+for f in *.gz; do
+    gunzip -f ${f}
+done
+
+# set run parameters
+start_time="${datestart:0:4}-${datestart:4:2}-${datestart:6:2} 00:00:00"
+stop_time="${dateend:0:4}-${dateend:4:2}-${dateend:6:2} 00:00:00"
+${cmd_nmlchange} -f gotmrun.nml -e start -v "${start_time}"
+${cmd_nmlchange} -f gotmrun.nml -e stop -v "${stop_time}"
+${cmd_nmlchange} -f gotmrun.nml -e title -v ${title}
+${cmd_nmlchange} -f gotmrun.nml -e out_fn -v ${outname}
+${cmd_nmlchange} -f gotmrun.nml -e dt -v ${dt}
+${cmd_nmlchange} -f gotmrun.nml -e nsave -v ${nsave}
+${cmd_nmlchange} -f gotmrun.nml -e nlev -v ${nlev}
+${cmd_nmlchange} -f gotmmean.nml -e ddu -v ${ddu}
+${cmd_nmlchange} -f gotmmean.nml -e ddl -v ${ddl}
+
+${cmd_nmlchange} -f airsea.nml -e sst_method -v 0
+${cmd_nmlchange} -f airsea.nml -e sss_method -v 0
+
+# set turbulence method
+source ${scpt_case_turbmethod}
+
+#######################################################################
+#                              Run GOTM                               #
+#######################################################################
+${cmd_gotm} 2> log.${outname}
+
+#######################################################################
+#                           Postprocessing                            #
+#######################################################################
+
+# plot surface forcing and profiles
+#source ${scpt_case_postproc}
