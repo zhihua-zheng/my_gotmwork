@@ -29,17 +29,17 @@ ddl=0
 
 # run parameters
 #dt=900
-dt=1800
-nsave=6
+dt=60
+nsave=60
 
 # starting and ending date - in the format of YYYYMMDD
 datestart="20120701"
-dateend="20131201"
+dateend="20120706"
 
 # name of the turbulence model
 # turbmethod="KPP-GOTM"
 # turbmethod="KPP-ROMS"
-turbmethod="KPP-CVMix"
+# turbmethod="KPP-CVMix"
 # turbmethod="KPPLT-EFACTOR"
 # turbmethod="KPPLT-ENTR"
 # turbmethod="KPPLT-RWHGK"
@@ -47,7 +47,7 @@ turbmethod="KPP-CVMix"
 # turbmethod="JHL"
 # turbmethod="EPBL"
 # turbmethod="EPBL-LT"
-# turbmethod="SMC"
+ turbmethod="SMC"
 # turbmethod="SMCLT"
 # turbmethod="K-EPSILON-SG"
 

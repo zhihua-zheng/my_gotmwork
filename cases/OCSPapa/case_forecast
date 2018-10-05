@@ -1,9 +1,45 @@
 #!/bin/bash
-# Run GOTM using preprocessed data for OCS Papa
-# Require a base case which contains the preprocessed input data
-# and namelist, e.g., as a result of case_test
+# Run GOTM using forecast data for OCS Papa
+#
 #
 # Zhihua Zheng, Sep. 29 2018
+
+#######################################################################
+#                         Program Basics                              #
+#######################################################################
+
+function usage() {
+    echo -e "\nRun ocean forecast for Ocean Climate Station Papa\n"
+    echo -e "Usage:\n$0 [arguments]\n"
+    echo -e "Run the forecast without updating the input data"
+    echo -e "if no arguments are used\n"
+    echo -e "Arguments:"
+    echo -e "  -new: grab most recent input data then run the forecast\n"
+    echo -e "  -old: run forecast based on current input data\n"
+}
+
+
+# check input arguments using flag l_new
+if [[ $# == 0 ]]; then
+    # run the forecast using current input data [default option]
+    l_new=false
+else
+    for param in "$@"; do
+        shift
+        case $param in
+            -new)
+                l_new=true
+                ;;
+            -old)
+                l_new=false
+                ;;
+            *)
+                usage
+                exit 1
+                ;;
+        esac
+    done
+fi
 
 #######################################################################
 #                              Set paths                              #
@@ -13,29 +49,38 @@
 source "../../set_tools.sh"
 
 # directory of base case
-basecase="${GOTMWORK_ROOT}/data/OCSPapa_forecast"
+basecase=~/Documents/GitHub/GOTM_FABM/GOTM/gotm_new_cases/\
+Papa_forecast/input_data
 
-# store current exceutable path
+# save current path for the main program
 main_path=$(pwd)
 
 #######################################################################
-#           Grab recent forcing and update input data                 #
+#                           Update input data                         #
 #######################################################################
 
-# OCSPapa subsurface T-S profiles
-tput setaf 1; echo "I am on the way to NCL script ..."
-cd ~/Documents/GitHub/GOTM_FABM/GOTM/gotm_new_cases/Papa_forecast/
-ncl get_ocsp_ts.ncl
 
-# GFS meteorological forcing
-tput setaf 1; echo "I am on the way to MATLAB script ..."
-matlab -nodesktop -nosplash -r "cd Papa_forecast; \
-  make_forecast_forcing ${basecase}/tprof_file.dat; exit;"
-# exit MATLAB after finish
+if [[ "${l_new}" == "true" ]]; then
+    echo -e "\n Retrieving most recent input data ... \n"
 
-# TO-DO: wave spectrum, WaveWatch III or wave buoy
+    ## go get new input data
 
-cd ${main_path} # back to the trail
+    # OCSPapa subsurface T-S profiles
+    echo -e "On the way to NCL script ... \n"
+    cd ~/Documents/GitHub/GOTM_FABM/GOTM/gotm_new_cases/Papa_forecast/
+    ncl get_ocsp_ts.ncl
+
+    # GFS meteorological forcing
+    echo -e "\nOn the way to MATLAB script ... \n"
+    matlab -nodesktop -nosplash -r "cd Papa_forecast; \
+      make_forecast_forcing 'input_data/tprof_file.dat'; exit;"
+    # exit MATLAB after finish
+
+    # TO-DO: wave spectrum, WaveWatch III or wave buoy
+
+    cd ${main_path} # back to the trail
+    echo -e "\nBack at the main program ... \n"
+fi
 
 #######################################################################
 #                           Set parameters                            #
@@ -51,7 +96,7 @@ ddl=0
 
 # run parameters
 #dt=900
-dt=1800
+dt=60
 nsave=6
 
 # starting and ending date - in the format of YYYYMMDD
@@ -66,9 +111,6 @@ dateend=$(echo ${date_info}| tr -d '-') # trim the dash
 # clear variables
 unset line
 unset date_info
-
-# datestart="20180928"
-# dateend="20181002"
 
 # name of the turbulence model
 
@@ -124,9 +166,6 @@ ${cmd_nmlchange} -f gotmrun.nml -e nsave -v ${nsave}
 ${cmd_nmlchange} -f gotmrun.nml -e nlev -v ${nlev}
 ${cmd_nmlchange} -f gotmmean.nml -e ddu -v ${ddu}
 ${cmd_nmlchange} -f gotmmean.nml -e ddl -v ${ddl}
-
-${cmd_nmlchange} -f airsea.nml -e sst_method -v 0
-${cmd_nmlchange} -f airsea.nml -e sss_method -v 0
 
 # set turbulence method
 source ${scpt_case_turbmethod}
