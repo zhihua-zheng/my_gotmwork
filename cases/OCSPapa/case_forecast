@@ -49,8 +49,7 @@ fi
 source "../../set_tools.sh"
 
 # directory of base case
-basecase=~/Documents/GitHub/GOTM_FABM/GOTM/gotm_new_cases/\
-Papa_forecast/input_data
+basecase="${PROCESS_ROOT}/Papa_forecast/input_data" # OCSPapa forecast forcing
 
 # save current path for the main program
 main_path=$(pwd)
@@ -63,11 +62,11 @@ main_path=$(pwd)
 if [[ "${l_new}" == "true" ]]; then
     echo -e "\n Retrieving most recent input data ... \n"
 
-    ## go get new input data
+    ## get new input data
 
     # OCSPapa subsurface T-S profiles
     echo -e "On the way to NCL script ... \n"
-    cd ~/Documents/GitHub/GOTM_FABM/GOTM/gotm_new_cases/Papa_forecast/
+    cd ${PROCESS_ROOT}/Papa_forecast
     ncl get_ocsp_ts.ncl
 
     # GFS meteorological forcing
@@ -129,7 +128,7 @@ unset date_info
 # turbmethod="K-EPSILON-SG"
 
 # output file name
-outname="gotm_out"
+outname="gotm_out_${datestart}-${dateend}"
 
 # case name
 casename="${title}_${turbmethod}_${datestart}-${dateend}"
@@ -181,3 +180,7 @@ ${cmd_gotm} 2> log.${outname}
 
 # plot surface forcing and profiles
 #source ${scpt_case_postproc}
+
+# upload the output file to Google Drive
+# folder ID: 1JlFnl1953A9j_2XBcRnt6xJx6GfVTtRk
+gdrive upload -p 1JlFnl1953A9j_2XBcRnt6xJx6GfVTtRk ${outname}.nc
