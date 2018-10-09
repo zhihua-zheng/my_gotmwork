@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run GOTM using forecast data for OCS Papa
+# Run GOTM using forecast data for OCSPapa
 #
 #
 # Zhihua Zheng, Sep. 29 2018
@@ -11,7 +11,7 @@
 function usage() {
     echo -e "\nRun ocean forecast for Ocean Climate Station Papa\n"
     echo -e "Usage:\n$0 [arguments]\n"
-    echo -e "Run the forecast without updating the input data"
+    echo -e "Run the forecast while updating the input data"
     echo -e "if no arguments are used\n"
     echo -e "Arguments:"
     echo -e "  -new: grab most recent input data then run the forecast\n"
@@ -21,8 +21,8 @@ function usage() {
 
 # check input arguments using flag l_new
 if [[ $# == 0 ]]; then
-    # run the forecast using current input data [default option]
-    l_new=false
+    # run the forecast with new input data [default option]
+    l_new=true
 else
     for param in "$@"; do
         shift
@@ -47,6 +47,7 @@ fi
 
 # setup paths and tools
 source "../../set_tools.sh"
+source activate gotmwork-pyenv # activate conda environment
 
 # directory of base case
 basecase="${PROCESS_ROOT}/Papa_forecast/input_data" # OCSPapa forecast forcing
@@ -179,8 +180,11 @@ ${cmd_gotm} 2> log.${outname}
 #######################################################################
 
 # plot surface forcing and profiles
-#source ${scpt_case_postproc}
+source ${scpt_case_postproc}
 
 # upload the output file to Google Drive
 # folder ID: 1JlFnl1953A9j_2XBcRnt6xJx6GfVTtRk
 gdrive upload -p 1JlFnl1953A9j_2XBcRnt6xJx6GfVTtRk ${outname}.nc
+
+# deactivate conda environment
+source deactivate gotmwork-pyenv
