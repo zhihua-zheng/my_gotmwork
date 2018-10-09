@@ -87,6 +87,7 @@ if [ ! -f ${gotmwork_env_file} ]; then
     dft_gotmbuild_root="${dft_gotm_root}/build"
     dft_gotmrun_root="${dft_gotm_root}/run"
     dft_gotmdata_root="${dft_gotm_root}/data"
+    dft_process_root="${HOME}/Documents/GitHub/GOTM_FABM/GOTM/gotm_new_cases"
 
     # instruction
     echo -e "Type in the full path of the directories. Leave it"
@@ -105,6 +106,8 @@ if [ ! -f ${gotmwork_env_file} ]; then
     gotmexe_root=$(get_inquire ${dft_gotmexe_root})
     inquire_dir "Directory to run GOTM" ${dft_gotmrun_root}
     gotmrun_root=$(get_inquire ${dft_gotmrun_root})
+    inquire_dir "Directory to process data" ${dft_process_root}
+    process_root=$(get_inquire ${dft_process_root})
 
     # write to the environment file
     echo "--------------------------------"
@@ -123,6 +126,7 @@ export GOTMBUILD_ROOT=${gotmbuild_root}
 export GOTMEXE_ROOT=${gotmexe_root}
 export GOTMRUN_ROOT=${gotmrun_root}
 export CVMIX_ROOT=${cvmix_root}
+export PROCESS_ROOT=${process_root}
 
 GOTMWORK_ENV
 
