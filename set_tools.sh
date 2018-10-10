@@ -16,6 +16,7 @@ cmd_gotm="${GOTMEXE_ROOT}/bin/gotm"
 tooldir="${GOTMWORK_ROOT}/tools"
 nmldir="${GOTMWORK_ROOT}/namelist"
 xmldir="${GOTMWORK_ROOT}/data"
+casedir="${GOTMWORK_ROOT}/cases"
 
 # tools
 cmd_nmlchange="${tooldir}/nmlchange"

@@ -46,14 +46,14 @@ fi
 #######################################################################
 
 # setup paths and tools
-source "../../set_tools.sh"
+source set_tools_gotm
 source activate gotmwork-pyenv # activate conda environment
+papa_dir="${casedir}/OCSPapa"
+
+cd ${papa_dir}
 
 # directory of base case
 basecase="${PROCESS_ROOT}/Papa_forecast/input_data" # OCSPapa forecast forcing
-
-# save current path for the main program
-main_path=$(pwd)
 
 #######################################################################
 #                           Update input data                         #
@@ -61,7 +61,7 @@ main_path=$(pwd)
 
 
 if [[ "${l_new}" == "true" ]]; then
-    echo -e "\n Retrieving most recent input data ... \n"
+    echo -e "\nRetrieving most recent input data ... \n"
 
     ## get new input data
 
@@ -78,7 +78,7 @@ if [[ "${l_new}" == "true" ]]; then
 
     # TO-DO: wave spectrum, WaveWatch III or wave buoy
 
-    cd ${main_path} # back to the trail
+    cd ${papa_dir} # back to the trail
     echo -e "\nBack at the main program ... \n"
 fi
 

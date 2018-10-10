@@ -18,9 +18,9 @@
 
    which returns `<pid> <status> local.forecast_OCSPapa`
 
-   An exit code (<status>) of 0 means either that the program was finished
-   successfully or that is has not been started yet. Positive numbers are
+   An exit code (`<status>`) of 0 means either that the program was finished
+   successfully or that it has not been started yet. Positive numbers are
    returned for program errors, while negative ones mean that the job has
    terminated due to a signal.
 
-* `launchctl unload ~/Library/LaunchAgents/<*.plist>` to unload the job
+* `launchctl unload /Library/LaunchDaemons/<*.plist>` to unload the job
