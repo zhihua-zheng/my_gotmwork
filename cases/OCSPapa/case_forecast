@@ -11,27 +11,31 @@
 function usage() {
     echo -e "\nRun ocean forecast for Ocean Climate Station Papa\n"
     echo -e "Usage:\n$0 [arguments]\n"
-    echo -e "Run the forecast while updating the input data"
+    echo -e "Run the forecast while updating the input data and upload output"
     echo -e "if no arguments are used\n"
     echo -e "Arguments:"
-    echo -e "  -new: grab most recent input data then run the forecast\n"
-    echo -e "  -old: run forecast based on current input data\n"
+    echo -e "  -old: run forecast using current input data and skip uploading\n"
+    echo -e "  -local: get new input data and run the forecast but \
+    skip uploading output file\n"
 }
 
 
-# check input arguments using flag l_new
+# check input arguments using flag l_new, l_upload
 if [[ $# == 0 ]]; then
     # run the forecast with new input data [default option]
     l_new=true
+    l_upload=true
 else
     for param in "$@"; do
         shift
         case $param in
-            -new)
+            -local)
                 l_new=true
+                l_upload=false
                 ;;
             -old)
                 l_new=false
+                l_upload=false
                 ;;
             *)
                 usage
@@ -132,7 +136,7 @@ unset date_info
 outname="gotm_out_${datestart}-${dateend}"
 
 # case name
-casename="${title}_${turbmethod}_${datestart}-${dateend}"
+casename="${title}_${turbmethod}"
 
 #######################################################################
 #                        Preprocess input data                        #
@@ -144,7 +148,9 @@ rundir="${GOTMRUN_ROOT}/OCSPapa_forecast/${casename}"
 if [ ! -d "${rundir}" ]; then
   mkdir -p ${rundir}  # create directory if doesn't exist
 fi
+
 cd ${rundir}
+/bin/rm *  # remove old files
 
 # copy base case
 cp ${basecase}/* ./
@@ -184,7 +190,9 @@ source ${scpt_case_postproc}
 
 # upload the output file to Google Drive
 # folder ID: 1JlFnl1953A9j_2XBcRnt6xJx6GfVTtRk
-gdrive upload -p 1JlFnl1953A9j_2XBcRnt6xJx6GfVTtRk ${outname}.nc
+if [[ "${l_upload}" == "true" ]]; then
+    gdrive upload -p 1JlFnl1953A9j_2XBcRnt6xJx6GfVTtRk ${outname}.nc
+fi
 
 # deactivate conda environment
 source deactivate gotmwork-pyenv
