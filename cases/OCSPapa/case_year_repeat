@@ -1,0 +1,131 @@
+#!/bin/bash
+# Run GOTM using preprocessed data for OCS Papa
+# Require a base case which contains the preprocessed input data
+# and namelist, e.g., as a result of case_test
+#
+# Zhihua Zheng, 20181016
+
+#######################################################################
+#                              Set paths                              #
+#######################################################################
+
+# setup paths and tools
+source "../../set_tools.sh"
+source activate gotmwork-pyenv # activate conda environment
+
+# directory of base case
+basecase="${GOTMWORK_ROOT}/data/OCSPapa_20100616-20171005" # long time series
+
+#######################################################################
+#                           Set parameters                            #
+#######################################################################
+
+# name of the dataset
+title="OCSPapa"
+
+# set levels, grid zooming at surface
+nlev=128
+ddu=2
+ddl=0
+
+# run parameters
+#dt=900
+dt=1800
+nsave=6
+
+# starting and ending date - in the format of YYYYMMDD
+start_list=("20100616" "20110616" "20120616" "20130616" "20140616" "20150616" \
+           "20160616")
+end_list=("20110616" "20120616" "20130616" "20140616" "20150616" "20160616" \
+         "20171005")
+
+# closure methods list
+turb_list=("SMC" "SMCLT")
+
+# name of the turbulence model
+# turbmethod="KPP-GOTM"
+# turbmethod="KPP-ROMS"
+# turbmethod="KPP-CVMix"
+# turbmethod="KPPLT-EFACTOR"
+# turbmethod="KPPLT-ENTR"
+# turbmethod="KPPLT-RWHGK"
+# turbmethod="OSMOSIS"
+# turbmethod="JHL"
+# turbmethod="EPBL"
+# turbmethod="EPBL-LT"
+# turbmethod="SMC"
+# turbmethod="SMCLT"
+# turbmethod="K-EPSILON-SG"
+
+#######################################################################
+#                        Loop over cases                              #
+#######################################################################
+
+# loop through turbulence model
+for idx in ${turb_list[@]}; do
+
+    # name of the turbulence model
+    turbmethod="$idx"
+
+    # case name
+    casename="${title}_${turbmethod}"
+
+    # loop through different years
+    for yr in ${!start_list[@]}; do
+
+        datestart=${start_list[yr]}
+        dateend=${end_list[yr]}
+
+        # output file name
+        outname="gotm_out_${datestart}-${dateend}"
+
+        # create run directory
+        rundir="${GOTMRUN_ROOT}/${casename}"
+        if [ ! -d "${rundir}" ]; then
+            mkdir -p ${rundir}
+            cd ${rundir}
+
+            # copy base case
+            cp ${basecase}/* ./
+
+            # decompress input data
+            for f in *.gz; do
+                gunzip -f ${f}
+            done
+        else
+            cd ${rundir}
+        fi
+
+        # set run parameters
+        start_time="${datestart:0:4}-${datestart:4:2}-${datestart:6:2} 00:00:00"
+        stop_time="${dateend:0:4}-${dateend:4:2}-${dateend:6:2} 00:00:00"
+        ${cmd_nmlchange} -f gotmrun.nml -e start -v "${start_time}"
+        ${cmd_nmlchange} -f gotmrun.nml -e stop -v "${stop_time}"
+        ${cmd_nmlchange} -f gotmrun.nml -e title -v ${title}
+        ${cmd_nmlchange} -f gotmrun.nml -e out_fn -v ${outname}
+        ${cmd_nmlchange} -f gotmrun.nml -e dt -v ${dt}
+        ${cmd_nmlchange} -f gotmrun.nml -e nsave -v ${nsave}
+        ${cmd_nmlchange} -f gotmrun.nml -e nlev -v ${nlev}
+        ${cmd_nmlchange} -f gotmmean.nml -e ddu -v ${ddu}
+        ${cmd_nmlchange} -f gotmmean.nml -e ddl -v ${ddl}
+
+        # set turbulence method
+        source ${scpt_case_turbmethod}
+
+        #######################################################################
+        #                              Run GOTM                               #
+        #######################################################################
+        ${cmd_gotm} 2> log.${outname}
+
+        #######################################################################
+        #                           Postprocessing                            #
+        #######################################################################
+
+        # plot surface forcing and profiles
+        source ${scpt_case_postproc}
+
+    done
+done
+
+# deactivate conda environments
+source deactivate gotmwork-pyenv
