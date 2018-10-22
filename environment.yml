@@ -9,7 +9,5 @@ dependencies:
     - jupyter
     - matplotlib
     - netCDF4
-    - pyferret
-    - ferret_datasets
     - ncl
     - basemap
