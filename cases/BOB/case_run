@@ -34,8 +34,8 @@ dt=1800
 nsave=6
 
 # starting and ending date - in the format of YYYYMMDD
-datestart="20160501"
-dateend="20160530"
+datestart="20160510"
+dateend="20160527"
 
 # name of the turbulence model
 # turbmethod="KPP-GOTM"
@@ -76,8 +76,8 @@ for f in *.gz; do
 done
 
 # set run parameters
-start_time="${datestart:0:4}-${datestart:4:2}-${datestart:6:2} 06:30:00"
-stop_time="${dateend:0:4}-${dateend:4:2}-${dateend:6:2} 17:30:00"
+start_time="${datestart:0:4}-${datestart:4:2}-${datestart:6:2} 21:30:00"
+stop_time="${dateend:0:4}-${dateend:4:2}-${dateend:6:2} 11:30:00"
 ${cmd_nmlchange} -f gotmrun.nml -e start -v "${start_time}"
 ${cmd_nmlchange} -f gotmrun.nml -e stop -v "${stop_time}"
 ${cmd_nmlchange} -f gotmrun.nml -e title -v ${title}
