@@ -17,3 +17,11 @@ timestamp
 cases/*/*.nml
 cases/*/*.xml
 !data/*/*.dat
+
+# ignore input data
+data/
+
+# ignore figures
+preparation/Papa/output_figs/
+preparation/Papa/pre_figs/
+preparation/Papa/test_figs/
