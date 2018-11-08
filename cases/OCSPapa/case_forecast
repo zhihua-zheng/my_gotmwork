@@ -51,13 +51,15 @@ fi
 
 # setup paths and tools
 source set_tools_gotm
+# at HOME, only necessary when run from arbitrary working directory
+
 source activate gotmwork-pyenv # activate conda environment
 papa_dir="${casedir}/OCSPapa"
 
 cd ${papa_dir}
 
 # directory of base case
-basecase="${PROCESS_ROOT}/Papa_forecast/input_data" # OCSPapa forecast forcing
+basecase="${GOTMWORK_ROOT}/data/OCSPapa_forecast" # OCSPapa forecast forcing
 
 #######################################################################
 #                           Update input data                         #
@@ -71,13 +73,13 @@ if [[ "${l_new}" == "true" ]]; then
 
     # OCSPapa subsurface T-S profiles
     echo -e "On the way to NCL script ... \n"
-    cd ${PROCESS_ROOT}/Papa_forecast
+    cd ${prepdir}/Papa_forecast
     ncl get_ocsp_ts.ncl
 
     # GFS meteorological forcing
     echo -e "\nOn the way to MATLAB script ... \n"
-    matlab -nodesktop -nosplash -r "cd Papa_forecast; \
-      make_forecast_forcing 'input_data/tprof_file.dat'; exit;"
+    matlab -nodesktop -nosplash -r "cd preparation/Papa_forecast; \
+      papa_forecast_forcing '${basecase}/tprof_file.dat'; exit;"
     # exit MATLAB after finish
 
     # TO-DO: wave spectrum, WaveWatch III or wave buoy

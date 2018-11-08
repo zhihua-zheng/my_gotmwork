@@ -37,7 +37,7 @@ nsave=6
 start_list=("20100616" "20110616" "20120616" "20130616" "20140616" "20150616" \
            "20160616")
 end_list=("20110616" "20120616" "20130616" "20140616" "20150616" "20160616" \
-         "20171005")
+         "20170616")
 
 # closure methods list
 turb_list=("SMC" "SMCLT")
@@ -122,7 +122,7 @@ for idx in ${turb_list[@]}; do
         #######################################################################
 
         # plot surface forcing and profiles
-        source ${scpt_case_postproc}
+        # source ${scpt_case_postproc}
 
     done
 done

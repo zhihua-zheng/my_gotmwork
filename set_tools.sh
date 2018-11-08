@@ -17,6 +17,7 @@ tooldir="${GOTMWORK_ROOT}/tools"
 nmldir="${GOTMWORK_ROOT}/namelist"
 xmldir="${GOTMWORK_ROOT}/data"
 casedir="${GOTMWORK_ROOT}/cases"
+prepdir="${GOTMWORK_ROOT}/preparation"
 
 # tools
 cmd_nmlchange="${tooldir}/nmlchange"

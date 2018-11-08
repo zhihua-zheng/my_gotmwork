@@ -17,8 +17,8 @@ case ${turbmethod} in
         ;;
     "SMCLT")
         ${cmd_nmlchange} -f gotmturb.nml -e turb_method -v 3
-        ${cmd_nmlchange} -f gotmturb.nml -e tke_method -v 4
-        ${cmd_nmlchange} -f gotmturb.nml -e len_scale_method -v 11
+        ${cmd_nmlchange} -f gotmturb.nml -e tke_method -v 4 # with Stkoes production
+        ${cmd_nmlchange} -f gotmturb.nml -e len_scale_method -v 11 # with Stkoes production
         ${cmd_nmlchange} -f gotmturb.nml -e e3 -v 5.0
         ${cmd_nmlchange} -f gotmturb.nml -e e6 -v 6.0
         ${cmd_nmlchange} -f gotmturb.nml -e scnd_method -v 4

@@ -48,8 +48,8 @@ dateend="20110404"
 # turbmethod="EPBL-LT"
 #turbmethod="KPP-CVMix"
 # turbmethod="K-EPSILON-SG"
- turbmethod="SMCLT"
-# turbmethod="SMC"
+# turbmethod="SMCLT"
+ turbmethod="SMC"
 
 # output file name
 outname="gotm_out"
