@@ -4,7 +4,7 @@
 % from PMEL ocean climate station Papa mooring, using reanalysis product
 % from MERRA2 (https://gmao.gsfc.nasa.gov/reanalysis/MERRA-2/data_access/)
 
-% ocean rainfall and open water skin temperature are from Ocean Surface 
+% ocean rainfall and open water skin temperature are from Ocean Surface
 % Diagnostics dataset 'tavg1_2d_ocn_Nx'.
 
 % sea level pressure is from Single-Level Diagnostics dataset
@@ -33,18 +33,18 @@ slp = zeros(length(lat_merra),length(lon_merra),24*num_files)*NaN;
 time_slp = zeros(24*num_files,1)*NaN;
 
 for K = 1:24:(24*num_files-23)
-    
+
   this_file = filenames{ceil(K/24)};
   slp(:,:,K:K+23) = ncread(this_file, ncvars{3});
-  
+
   % get the reference time
   t_ref = ncreadatt(this_file,'time','units'); % get the attribute 'units' for 'time'
   t_ref = t_ref(15:end); % truncate to the time string
   t_ref = datenum(t_ref, 'yyyy-mm-dd HH:MM:SS');
-  
+
   % date numbers for the timestamp
   time_slp(K:K+23) = double(ncread(this_file, ncvars{4}))/(60*24) + t_ref;
-  
+
 end
 
 % date_slp = string(datestr(time_slp,'yyyy/mm/dd HH:MM:SS'));
@@ -78,23 +78,23 @@ ts = zeros(length(lat_merra),length(lon_merra),24*num_files)*NaN; % skin tempera
 time_sst = zeros(24*num_files,1)*NaN;
 
 for K = 1:24:(24*num_files-23)
-    
+
   this_file = filenames{ceil(K/24)};
   ts(:,:,K:K+23) = ncread(this_file, ncvars{3});
-  
+
   % get the reference time
   t_ref = ncreadatt(this_file,'time','units'); % get the attribute 'units' for 'time'
   t_ref = t_ref(15:end); % truncate to the time string
   t_ref = datenum(t_ref, 'yyyy-mm-dd HH:MM:SS');
-  
+
   % date numbers for the timestamp
   time_sst(K:K+23) = double(ncread(this_file, ncvars{4}))/(60*24) + t_ref;
-  
+
 end
 
 [X_merra, Y_merra, Z_merra] = meshgrid(lon_merra,lat_merra,time_sst);
 
-% interpolate to get the sea level pressure time series at buoy site
+% interpolate to get the sea surface temperature time series at buoy site
 ts_papa = interp3(X_merra,Y_merra,Z_merra,ts,...
     (lon-360)*ones(size(bad_sst)),lat*ones(size(bad_sst)),time(bad_sst))-273.15;
 % the unit for surface skin temperature in merra is Kelvin
@@ -123,25 +123,25 @@ rainfall = zeros(length(lat_merra),length(lon_merra),24*num_files)*NaN; % rain r
 time_rainfall = zeros(24*num_files,1)*NaN;
 
 for K = 1:24:(24*num_files-23)
-    
+
   this_file = filenames{ceil(K/24)};
   rainfall(:,:,K:K+23) = ncread(this_file, ncvars{3});
-  
+
   % get the reference time
   t_ref = ncreadatt(this_file,'time','units'); % get the attribute 'units' for 'time'
   t_ref = t_ref(15:end); % truncate to the time string
   t_ref = datenum(t_ref, 'yyyy-mm-dd HH:MM:SS');
-  
+
   % date numbers for the timestamp
   time_rainfall(K:K+23) = double(ncread(this_file, ncvars{4}))/(60*24) + t_ref;
-  
+
 end
 
 [X_merra, Y_merra, Z_merra] = meshgrid(lon_merra,lat_merra,time_rainfall);
 
-% interpolate to get the sea level pressure time series at buoy site
+% interpolate to get the rain rate time series at buoy site
 rainfall_papa = interp3(X_merra,Y_merra,Z_merra,rainfall,...
-    (lon-360)*ones(size(bad_rain)),lat*ones(size(bad_rain)),time(bad_rain))*3600;
+    (lon-360)*ones(size(bad_rain)),lat*ones(size(bad_rain)),time(bad_rain))*3600; % [mm/hr]
 % the unit for rain rate in merra is kg/(m^2*s) ~ mm/s (no salt in rain)
 
 rain_r = [rain; ones(length(time_rain)-length(time))];
@@ -150,4 +150,3 @@ rain_r(bad_rain) = rainfall_papa;
 %% clean
 
 clear t_ref
-

@@ -7,7 +7,7 @@ function gfs = get_gfs_forecast(lon,lat,t_0)
 %  gfs = get_gfs_forecast(lon,lat,t_0)
 %
 % DESCRIPTION:
-%  Function to retrieve meteorological forecast data from Global Forecast 
+%  Function to retrieve meteorological forecast data from Global Forecast
 %  System (GFS).
 %
 % INPUT:
@@ -21,20 +21,20 @@ function gfs = get_gfs_forecast(lon,lat,t_0)
 %  Struct containing meteorological forcing info for given location
 %
 % AUTHOR:
-%  September 15 2018. Eric D'Asaro                       
-%  September 17 2018. Zhihua Zheng                     [ zhihua@uw.edu ]   
+%  September 15 2018. Eric D'Asaro
+%  September 17 2018. Zhihua Zheng                     [ zhihua@uw.edu ]
 
 gfs = struct();
 
 %% set the source and get time
 
-% OWS P nominal location 50.1°N, 144.9°W
+% OWS P nominal location 50.1ï¿½N, 144.9ï¿½W
 % lon0 =  360-(144+25/60);
 % lat0 =  50+22/60;
 lon0 = lon;
 lat0 = lat;
 
-% GrADS data server for GFS forecast, using 0.25 degree resolution 
+% GrADS data server for GFS forecast, using 0.25 degree resolution
 url_fmt = 'http://nomads.ncep.noaa.gov:9090/dods/gfs_0p25_1hr/gfs%s/gfs_0p25_1hr_00z'; % there are also 06z, 12z, 18z...
 % chosse 00z since the T-S profile data at OCSPapa is published as 00z
 
@@ -49,7 +49,7 @@ t = ncread(gfs.url,'time');
 t_ref = ncreadatt(gfs.url,'time','units'); % get the attribute 'unit' for 'time'
 disp(['The unit for time in GFS netCDF file is: ', t_ref])
 gfs.time = 365 + t;
-gfs.yd = gfs.time - datenum('01-Jan-2018') + 1; 
+gfs.yd = gfs.time - datenum('01-Jan-2018') + 1;
 gfs.date = datestr(gfs.time,'yyyy-mm-dd HH:MM:SS');
 
 %% find the closest grid point indices:
@@ -66,16 +66,16 @@ lat = ncread(gfs.url,'lat');
 
 %% wind speed...
 disp('get wind speed ...')
-gfs.u = squeeze(ncread(gfs.url,'ugrd10m',[ilon ilat 1],[1 1 inf])); %** 10 m above ground u-component of wind [m/s] 
-gfs.v = squeeze(ncread(gfs.url,'vgrd10m',[ilon ilat 1],[1 1 inf])); %** 10 m above ground v-component of wind [m/s] 
+gfs.u = squeeze(ncread(gfs.url,'ugrd10m',[ilon ilat 1],[1 1 inf])); %** 10 m above ground u-component of wind [m/s]
+gfs.v = squeeze(ncread(gfs.url,'vgrd10m',[ilon ilat 1],[1 1 inf])); %** 10 m above ground v-component of wind [m/s]
 W = complex(gfs.u,gfs.v);
 
 %% wind stress...  Switch sign to oceanographic convention
 disp('get wind stress ...');
 
 % sign switched to represent surface stress
-gfs.tau_x = -squeeze(ncread(gfs.url,'uflxsfc',[ilon ilat 1],[1 1 inf])); % ** surface momentum flux, u-component [n/m^2] 
-gfs.tau_y = -squeeze(ncread(gfs.url,'vflxsfc',[ilon ilat 1],[1 1 inf])); % ** surface momentum flux, v-component [n/m^2] 
+gfs.tau_x = -squeeze(ncread(gfs.url,'uflxsfc',[ilon ilat 1],[1 1 inf])); % ** surface momentum flux, u-component [n/m^2]
+gfs.tau_y = -squeeze(ncread(gfs.url,'vflxsfc',[ilon ilat 1],[1 1 inf])); % ** surface momentum flux, v-component [n/m^2]
 % tau = complex(gfs.tau_x,gfs.tau_y);
 
 %% Fluxes
@@ -90,7 +90,7 @@ lwd=squeeze(ncread(gfs.url,'dlwrfsfc',[ilon ilat 1],[1 1 inf]));
 lwu=squeeze(ncread(gfs.url,'ulwrfsfc',[ilon ilat 1],[1 1 inf]));
 rain=squeeze(ncread(gfs.url,'pratesfc',[ilon ilat 1],[1 1 inf])); % kg/m^2/s
 rain=rain/1000; % m/s
-gfs.rain = rain*1000/3600; % mm/hr
+gfs.rain = rain*1000/(1/3600); % mm/hr
 
 %% Flux processing and save data
 
