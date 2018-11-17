@@ -39,11 +39,11 @@ else
 end
 
 %% Plot -------------------------------------------------------------------
-cnum = 15;
-conts = linspace(CL(1),CL(2),cnum);
+
+conts = (floor(CL(1)):1:ceil(CL(2)));
 [T, Z] = meshgrid(t,d);
 
-figure('position', [0, 0, 980, 250])
+figure('position', [0, 0, 900, 300])
 
 switch spec_info.plot_method
     case 1

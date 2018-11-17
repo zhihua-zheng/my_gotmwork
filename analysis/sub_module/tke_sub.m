@@ -14,6 +14,8 @@ model_par.rescale_r = 1;
 
 %% ----- computation ------------------------------------------------------
 
+% Note - the TKE components result is messy for OCSPapa simulation!!
+
 % compute components of TKE
 tke_comps = get_tke_comp(model_par,out,1);
 tke_comps(tke_comps<0) = NaN;
@@ -49,7 +51,7 @@ spec_info.save_path = './figs/vv_norm';
 plot_time_depth(time,zi,tke_comps_n(:,:,2),spec_info)
 
 % 2*TKE 
-tke_n = 2*out.tke./(repmat(u_star2',251,1));
+tke_n = 2*out.tke./(repmat(u_star2',length(zi),1));
 
 spec_info.clabel = '$$q^{2}/u_{*}^{2}$$';
 spec_info.save_path = './figs/qq_norm';

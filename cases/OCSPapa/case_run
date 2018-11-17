@@ -9,11 +9,14 @@
 #                              Set paths                              #
 #######################################################################
 
+# activate conda environment
+source activate gotmwork-pyenv
+
 # setup paths and tools
 source "../../set_tools.sh"
 
 # directory of base case
-basecase="${GOTMWORK_ROOT}/data/OCSPapa_20120101-20131204"
+basecase="${GOTMWORK_ROOT}/data/OCSPapa_20100616-20171005"
 
 #######################################################################
 #                           Set parameters                            #
@@ -55,7 +58,8 @@ dateend="20131201"
 outname="gotm_out"
 
 # case name
-casename="${title}_${turbmethod}_${datestart}-${dateend}_${dt}"
+# casename="${title}_${turbmethod}_${datestart}-${dateend}"
+casename="${title}_${turbmethod}_${datestart}-${dateend}_relax"
 
 #######################################################################
 #                        Preprocess input data                        #
@@ -87,6 +91,10 @@ ${cmd_nmlchange} -f gotmrun.nml -e nlev -v ${nlev}
 ${cmd_nmlchange} -f gotmmean.nml -e ddu -v ${ddu}
 ${cmd_nmlchange} -f gotmmean.nml -e ddl -v ${ddl}
 
+# add T_S relaxation for the bulk of the layer
+${cmd_nmlchange} -f obs.nml -e SRelaxTauM -v $((dt*nsave))
+${cmd_nmlchange} -f obs.nml -e TRelaxTauM -v $((dt*nsave))
+
 # set turbulence method
 source ${scpt_case_turbmethod}
 
@@ -101,3 +109,6 @@ ${cmd_gotm} 2> log.${outname}
 
 # plot surface forcing and profiles
 source ${scpt_case_postproc}
+
+# deactivate conda environment
+source deactivate gotmwork-pyenv

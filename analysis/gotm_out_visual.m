@@ -13,9 +13,22 @@ init_analyze;
 
 heat_content;
 
-%% Mixed Layer Depth (diagnosed from TKE threshold, mld_method = 1)
+%% Mixed Layer Depth (diagnosed from Ri criteria, mld_method = 2)
 
 mixed_layer_d;
+
+spec_info.clim = [];
+spec_info.clabel = '$log_{10} (TKE)$ $m^2/s^2$';
+spec_info.ylim = [-150 0];
+spec_info.color = 'tempo';
+spec_info.plot_method = 1;
+spec_info.save_path = [];
+plot_time_depth(time,zi,log10(out.tke),spec_info)
+hold on
+plot(time,-mld,'Color',rgb('pinkish'),'LineWidth',.1)
+
+saveas(gcf,'./figs/mld_on_tke','fig');
+
 
 %% Currents
 
@@ -137,7 +150,7 @@ spec_info.clim = [];
 spec_info.clabel = 'potential temperature ($$^{\circ}C$$)';
 spec_info.color = 'haline';
 spec_info.plot_method = 1;
-spec_info.ylim = [zi(1), 0];
+spec_info.ylim = [-150, 0];
 spec_info.save_path = './figs/temp';
 
 plot_time_depth(time,z,temp,spec_info)

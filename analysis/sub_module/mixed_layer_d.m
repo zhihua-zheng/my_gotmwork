@@ -11,6 +11,7 @@ mld = out.mld_surf;
 
 % inertial frequency
 f_Coriolis = gsw_f(out.lat); % [radian/s]
+
 % inertial period
 t_Coriolis = 2*pi/f_Coriolis/3600; % [hour]
 
@@ -25,10 +26,10 @@ end
 
 
 figure('position', [0, 0, 900, 300])
-line(time,-mld,'LineWidth',.4,'Color',[.2 .6 .9])
+line(time,-mld,'LineWidth',.4,'Color',rgb('pinkish'))
 
 spec_info.grid_on = 1;
-spec_info.x_lim = [];
+spec_info.x_lim = [time(1) time(end)];
 spec_info.y_lim = [];
 spec_info.xlabel = 'time';
 spec_info.ylabel = 'mixed layer depth (m)';

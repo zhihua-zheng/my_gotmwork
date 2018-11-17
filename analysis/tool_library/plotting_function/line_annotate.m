@@ -75,13 +75,13 @@ if ~isempty(spec_info.lgd)
     end
     
     lgd = legend(spec_info.lgd,'Location',pos);
-    set(lgd,'Interpreter','latex','fontsize', 20)
+    set(lgd,'Interpreter','latex','fontsize',20,'color','none')
 end
 
 %% Save option ------------------------------------------------------------
 if ~isempty(spec_info.save_path)
     
-    export_fig(spec_info.save_path,'-eps','-transparent','-painters')
+    export_fig(spec_info.save_path,'-pdf','-transparent','-painters')
 end
 
 end
