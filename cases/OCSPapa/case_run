@@ -9,6 +9,34 @@
 #                              Set paths                              #
 #######################################################################
 
+function usage() {
+    echo -e "Run 1-D simulation for Ocean Climate Station Papa\n"
+    echo -e "Usage:\n$0 [arguments]\n"
+    echo -e "Run simulation without relaxation if no arguments are used\n"
+    echo -e "Arguments:"
+    echo -e "  -relax: run simulation with T-S relaxation to observation,"
+    echo -e "          requiring full time series of T-S profile. \n"
+}
+
+# check input arguments using flag l_rel
+if [[ $# == 0 ]]; then
+    # run without relaxation [default option]
+    l_rel=false
+else
+    for param in "$@"; do
+        shift
+        case $param in
+            -relax)
+                l_rel=true
+                ;;
+            *)
+                usage
+                exit 1
+                ;;
+        esac
+    done
+fi
+
 # activate conda environment
 source activate gotmwork-pyenv
 
@@ -50,8 +78,8 @@ dateend="20131201"
 # turbmethod="JHL"
 # turbmethod="EPBL"
 # turbmethod="EPBL-LT"
-# turbmethod="SMC"
- turbmethod="SMCLT"
+ turbmethod="SMC"
+# turbmethod="SMCLT"
 # turbmethod="K-EPSILON-SG"
 
 # output file name
@@ -59,7 +87,7 @@ outname="gotm_out"
 
 # case name
 # casename="${title}_${turbmethod}_${datestart}-${dateend}"
-casename="${title}_${turbmethod}_${datestart}-${dateend}_relax"
+casename="${title}_${turbmethod}_${datestart}-${dateend}"
 
 #######################################################################
 #                        Preprocess input data                        #
@@ -91,9 +119,11 @@ ${cmd_nmlchange} -f gotmrun.nml -e nlev -v ${nlev}
 ${cmd_nmlchange} -f gotmmean.nml -e ddu -v ${ddu}
 ${cmd_nmlchange} -f gotmmean.nml -e ddl -v ${ddl}
 
-# add T_S relaxation for the bulk of the layer
-${cmd_nmlchange} -f obs.nml -e SRelaxTauM -v $((dt*nsave))
-${cmd_nmlchange} -f obs.nml -e TRelaxTauM -v $((dt*nsave))
+if [[ "${l_relax}" == "true" ]]; then
+  echo -e "\nadd T_S relaxation for the bulk of the layer \n"
+  ${cmd_nmlchange} -f obs.nml -e SRelaxTauM -v $((dt*nsave))
+  ${cmd_nmlchange} -f obs.nml -e TRelaxTauM -v $((dt*nsave))
+fi
 
 # set turbulence method
 source ${scpt_case_turbmethod}
