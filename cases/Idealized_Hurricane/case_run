@@ -48,8 +48,8 @@ dateend="20110404"
 # turbmethod="EPBL-LT"
 #turbmethod="KPP-CVMix"
 # turbmethod="K-EPSILON-SG"
-# turbmethod="SMCLT"
- turbmethod="SMC"
+ turbmethod="SMCLT"
+# turbmethod="SMC"
 
 # output file name
 outname="gotm_out"
@@ -70,38 +70,44 @@ fi
 
 cd ${rundir}
 
-# copy base case
-cp -r ${basecase}/* ./
+if [ -z "$(ls -A ${rundir})" ]; then
+  # copy base case if the directory is empty
+  cp -r ${basecase}/* ./
+fi
 
-for LOC in 046
+# set turbulence method
+source ${scpt_case_turbmethod}
+
+# set run parameters
+start_time="${datestart:0:4}-${datestart:4:2}-${datestart:6:2} 00:00:00"
+stop_time="${dateend:0:4}-${dateend:4:2}-${dateend:6:2} 00:00:00"
+${cmd_nmlchange} -f gotmrun.nml -e start -v "${start_time}"
+${cmd_nmlchange} -f gotmrun.nml -e stop -v "${stop_time}"
+${cmd_nmlchange} -f gotmrun.nml -e title -v ${title}
+${cmd_nmlchange} -f gotmrun.nml -e out_fn -v ${outname}
+${cmd_nmlchange} -f gotmrun.nml -e dt -v ${dt}
+${cmd_nmlchange} -f gotmrun.nml -e nsave -v ${nsave}
+${cmd_nmlchange} -f gotmrun.nml -e nlev -v ${nlev}
+${cmd_nmlchange} -f gotmrun.nml -e depth -v ${depth}
+${cmd_nmlchange} -f gotmrun.nml -e latitude -v ${Latitude}
+${cmd_nmlchange} -f gotmmean.nml -e ddu -v ${ddu}
+${cmd_nmlchange} -f gotmmean.nml -e ddl -v ${ddl}
+${cmd_nmlchange} -f airsea.nml -e const_heat -v ${heatflux}
+
+###########################################################################
+#                                Run GOTM                                 #
+###########################################################################
+
+# loop through 101 stations across the track
+for LOC in $(seq -f "%03g" 1 101)
 do
     rm momentumflux.dat
-    ln -s ./MomentumFlux/05/momentumflux${LOC}.dat momentumflux.dat
+    ln -s ${basecase}/MomentumFlux/05/momentumflux${LOC}.dat momentumflux.dat
+
     rm SPC.txt
-    ln -s ./SPC/SPC${LOC}.txt SPC.txt
+    ln -s ${basecase}/SPC/SPC${LOC}.txt SPC.txt
 
-    # set turbulence method
-    source ${scpt_case_turbmethod}
-
-    # set run parameters
-    start_time="${datestart:0:4}-${datestart:4:2}-${datestart:6:2} 00:00:00"
-    stop_time="${dateend:0:4}-${dateend:4:2}-${dateend:6:2} 00:00:00"
-    ${cmd_nmlchange} -f gotmrun.nml -e start -v "${start_time}"
-    ${cmd_nmlchange} -f gotmrun.nml -e stop -v "${stop_time}"
-    ${cmd_nmlchange} -f gotmrun.nml -e title -v ${title}
-    ${cmd_nmlchange} -f gotmrun.nml -e out_fn -v ${outname}
-    ${cmd_nmlchange} -f gotmrun.nml -e dt -v ${dt}
-    ${cmd_nmlchange} -f gotmrun.nml -e nsave -v ${nsave}
-    ${cmd_nmlchange} -f gotmrun.nml -e nlev -v ${nlev}
-    ${cmd_nmlchange} -f gotmrun.nml -e depth -v ${depth}
-    ${cmd_nmlchange} -f gotmrun.nml -e latitude -v ${Latitude}
-    ${cmd_nmlchange} -f gotmmean.nml -e ddu -v ${ddu}
-    ${cmd_nmlchange} -f gotmmean.nml -e ddl -v ${ddl}
-    ${cmd_nmlchange} -f airsea.nml -e const_heat -v ${heatflux}
-
-    ###################################################################
-    #                          Run GOTM                               #
-    ###################################################################
+    echo -e "\nRun simulation for station ${LOC}"
     ${cmd_gotm} 2> log.${outname}
     mv ${outname}.nc STORAGE/${outname}_${LOC}.nc
 done
