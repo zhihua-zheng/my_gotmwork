@@ -5,7 +5,7 @@ function tke_comps = get_tke_comp(model_par, out, rotate_w)
 %
 % USAGE:
 %  tke_comps = get_tke_comp(model_par, out, rotate_w)
-
+%
 %
 % DESCRIPTION:
 %  Compute different components of turbulent kinetic energy (TKE) based on
@@ -21,10 +21,10 @@ function tke_comps = get_tke_comp(model_par, out, rotate_w)
 %
 % OUTPUT:
 %
-%  tke_comps - 3-D matrix containning different components of TKE
-%  tke_comps(:,:,1) - horizontal(x) velocity fluctuation variance [m^2/s^2]
-%  tke_comps(:,:,2) - horizontal(y) velocity fluctuation variance [m^2/s^2]
-%  tke_comps(:,:,3) - vertical(z) velocity fluctuation variance [m^2/s^2]
+%  tke_comp - 3-D matrix containning different components of TKE
+%  tke_comp(:,:,1) - horizontal(x) velocity fluctuation variance [m^2/s^2]
+%  tke_comp(:,:,2) - horizontal(y) velocity fluctuation variance [m^2/s^2]
+%  tke_comp(:,:,3) - vertical(z) velocity fluctuation variance [m^2/s^2]
 %
 % AUTHOR:
 %  September 16 2018. Zhihua Zheng                       [ zhihua@uw.edu ]
@@ -59,10 +59,10 @@ B1 = model_par.B1;
 g = 9.81;
 
 % divided by (-rho_0) to get thermal expanison coefficient (positive)
-alpha = - model_par.dtr0/model_par.rho_0; 
+alpha = - model_par.dtr0/model_par.rho_0; %[K^(-1)]
 
-% divided by (-rho_0) to get saline expanison coefficient (positive)
-belta =  model_par.dsr0/model_par.rho_0; 
+% divided by (rho_0) to get saline contraction coefficient (positive)
+belta =  model_par.dsr0/model_par.rho_0; %[psu^(-1)]
 
 %% Get vertical gradients
 [u_z, v_z, uStokes_z, vStokes_z, temp_z, salt_z] = ...
@@ -99,19 +99,42 @@ phi = repmat(phi,size(fS,1),1);
 
 %% Computation
 
-% TO-DO: incorporate turbulent salinity fluxes
 
-% u_u
-tke_comps(:,:,1) = q2*(1-6*A1/B1)/3 - (6*A1*l_over_q).*(u_w.*u_z + ...
-    (sin(phi)).^2.*fS.*(u_w.*uStokes_z + v_w.*vStokes_z));
+if string(out.turb_method) == 'SMCLT'
+    % u_u
+    tke_comps(:,:,1) = q2*(1-6*A1/B1)/3 - (6*A1*l_over_q).*(u_w.*u_z + ...
+        (sin(phi)).^2.*fS.*(u_w.*uStokes_z + v_w.*vStokes_z));
 
-% v_v
-tke_comps(:,:,2) = q2*(1-6*A1/B1)/3 - (6*A1*l_over_q).*(v_w.*v_z + ...
-    (cos(phi)).^2.*fS.*(u_w.*uStokes_z + v_w.*vStokes_z));
+    % v_v
+    tke_comps(:,:,2) = q2*(1-6*A1/B1)/3 - (6*A1*l_over_q).*(v_w.*v_z + ...
+        (cos(phi)).^2.*fS.*(u_w.*uStokes_z + v_w.*vStokes_z));
 
-% w_w
-tke_comps(:,:,3) = q2*(1-6*A1/B1)/3 + (6*A1*l_over_q).*(alpha*g*theta_w...
-    - belta*g*s_w + (fS-1).*(u_w.*uStokes_z + v_w.*vStokes_z));
+    % w_w
+    tke_comps(:,:,3) = q2*(1-6*A1/B1)/3 + (6*A1*l_over_q).*(alpha*g*theta_w...
+        - belta*g*s_w + (fS-1).*(u_w.*uStokes_z + v_w.*vStokes_z));
+else
+    % u_u
+    tke_comps(:,:,1) = q2*(1-6*A1/B1)/3 - (6*A1*l_over_q).*(u_w.*u_z);
 
+    % v_v
+    tke_comps(:,:,2) = q2*(1-6*A1/B1)/3 - (6*A1*l_over_q).*(v_w.*v_z);
+
+    % w_w
+    tke_comps(:,:,3) = q2*(1-6*A1/B1)/3 + (6*A1*l_over_q).*(alpha*g*theta_w...
+        - belta*g*s_w);
+end
+
+%% Interpolation for bad data
+
+% tke_comps(tke_comps<0) = NaN;
+% 
+% % for w_w
+% for j = 1:size(tke_comps,2)-1
+%     b = find(isnan(tke_comps(:,j,3))); % index for NaN
+%     if ~isempty(b)
+%         g = find(~isnan(tke_comps(:,j,3))); % index for good data
+%         tke_comps(b,j,3) = interp1(Zi(g,j),tke_comps(g,j,3),Zi(b,j));
+%     end
+% end
 
 end

@@ -46,8 +46,16 @@ nu_s = out.nu_s(2:end-1,:);
     get_z_gradient(out,rotate_w);
 
 %% Computation
-u_w = -(nu_m.*u_z + nu_cl.*uStokes_z);
-v_w = -(nu_m.*v_z + nu_cl.*vStokes_z);
+
+if string(out.turb_method) == 'SMCLT'
+    
+    u_w = -(nu_m.*u_z + nu_cl.*uStokes_z);
+    v_w = -(nu_m.*v_z + nu_cl.*vStokes_z);
+else
+    u_w = -nu_m.*u_z;
+    v_w = -nu_m.*v_z;
+end   
+
 theta_w = -(nu_h.*temp_z);
 s_w = -(nu_s.*salt_z);
 
