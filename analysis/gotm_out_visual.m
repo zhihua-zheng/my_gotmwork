@@ -7,28 +7,61 @@
 
 %% General Configuration before Analysis
 
-init_analyze;
+init_analy;
 
 %% Heat Content
 
+lable_as_yd = 0; % 1 to use yearday, 0 to use time string
 heat_content;
 
 %% Mixed Layer Depth (diagnosed from Ri criteria, mld_method = 2)
 
 mixed_layer_d;
 
-spec_info.clim = [];
-spec_info.clabel = '$log_{10} (TKE)$ $m^2/s^2$';
-spec_info.ylim = [-150 0];
-spec_info.color = 'tempo';
-spec_info.plot_method = 1;
-spec_info.save_path = [];
-plot_time_depth(time,zi,log10(out.tke),spec_info)
+plot_info.clim = [];
+plot_info.clabel = '$log_{10}(TKE)$ $m^2/s^2$';
+plot_info.ylabel = 'depth (m)';
+plot_info.ylim = [-300 0];
+plot_info.color = 'tempo';
+plot_info.plot_method = 3;
+plot_info.save_path = [];
+plot_time_depth(time,zi,log10(out.tke),plot_info)
 hold on
 plot(time,-mld,'Color',rgb('pinkish'),'LineWidth',.1)
+% hold on 
+% contour(log10(out.tke),[-5 -5],'LineWidth',0.01,'LineColor','k')
 
 saveas(gcf,'./figs/mld_on_tke','fig');
 
+
+%% Potential Energy (PE)
+
+% PE per unit volume for the whole water column
+g = 9.81; %[m/s^2]
+pe = sum(rho.*h*g); %[J/m^2]
+pe_obs = sum(rho_obs.*h*g); %[kg/(m*s^2)]
+
+figure('position', [0, 0, 900, 300])
+line(time,pe_obs./10^6,'LineWidth',.1,'Color',rgb('light teal'))
+line(time,pe./10^6,'LineWidth',1,'Color',[.7 .4 .6])
+
+plot_info.lgd = {'obs. PE',[turb_method,' PE']};
+plot_info.ylabel = 'potential energy ($MJ/m^{2}$)';
+plot_info.save_path = './figs/PE';
+line_annotate(plot_info)
+
+windowSize = 8; % average in one day
+b = (1/windowSize)*ones(1,windowSize);
+a = 1;
+pe_diff = filter(b,a,pe-pe_obs);
+
+figure('position', [0, 0, 900, 300])
+line(time,pe_diff,'LineWidth',.1,'Color',rgb('ocean blue'))
+line(time,zeros(size(pe)),'LineWidth',.1,'Color',rgb('royal purple'),'LineStyle','--')
+plot_info.lgd = turb_method;
+plot_info.ylabel = 'model PE - obs. PE ($J/m^{2}$)';
+plot_info.save_path = './figs/PE_diff';
+line_annotate(plot_info)
 
 %% Currents
 
@@ -94,9 +127,9 @@ rotary_spec(f,p_cur,24/t_Coriolis,1)
 
 %--------------------------------------------------------------------------
 
-% spec_info.save = 0;
-% spec_info.plot_method = 1;
-% plot_time_depth(time,z,abs(cur),spec_info)
+% plot_info.save = 0;
+% plot_info.plot_method = 1;
+% plot_time_depth(time,z,abs(cur),plot_info)
 
 %% Turbulence Statistics - turbulent fluxes & TKE components
 
@@ -145,55 +178,56 @@ semilogx(nu_s_keps_pick,zi,'LineWidth',.4,'Color',[.4 .3 .5])
 %% Evolution of Temperature Profile (prediction and observation)
 
 % model prediction
-spec_info.ylabel = 'depth ($$m$$)';
-spec_info.clim = [];
-spec_info.clabel = 'potential temperature ($$^{\circ}C$$)';
-spec_info.color = 'haline';
-spec_info.plot_method = 1;
-spec_info.ylim = [-150, 0];
-spec_info.save_path = './figs/temp';
+plot_info.ylabel = 'depth ($$m$$)';
+plot_info.clim = [];
+plot_info.clabel = 'potential temperature ($$^{\circ}C$$)';
+plot_info.color = 'haline';
+plot_info.plot_method = 1;
+plot_info.ylim = [-150, 0];
+plot_info.save_path = './figs/temp';
 
-plot_time_depth(time,z,temp,spec_info)
+plot_time_depth(time,z,temp,plot_info)
 
 % observation
-spec_info.clim = [min(min(temp)) max(max(temp))];
-spec_info.clabel = 'obs. potential temperature ($$^{\circ}C$$)';
-spec_info.color = 'haline';
-spec_info.save_path = './figs/temp_obs';
+plot_info.clim = [min(min(temp)) max(max(temp))];
+plot_info.clabel = 'obs. potential temperature ($$^{\circ}C$$)';
+plot_info.color = 'haline';
+plot_info.save_path = './figs/temp_obs';
 
-plot_time_depth(time,z,temp_obs,spec_info)
+plot_time_depth(time,z,temp_obs,plot_info)
 
 % prediction - observation
-spec_info.clim = 'symmetric';
-spec_info.clabel = 'temperature diffence ($$^{\circ}C$$)';
-spec_info.color = 'curl';
-spec_info.save_path = [];
-spec_info.save_path = './figs/temp_diff';
+plot_info.clim = 'symmetric';
+plot_info.clabel = 'temperature diffence ($$^{\circ}C$$)';
+plot_info.color = 'curl';
+plot_info.save_path = [];
+plot_info.save_path = './figs/temp_diff';
 
-plot_time_depth(time,z,temp-temp_obs,spec_info)
+plot_time_depth(time,z,temp-temp_obs,plot_info)
 
 
 %% SST
+
 do_sst_analysis;
 
 %% length scale
 
-spec_info.clim = [];
-spec_info.color = 'tempo';
-spec_info.save_path = './figs/length';
-spec_info.clabel = 'length scale ($$m$$)';
-spec_info.ylabel = 'depth (m)';
-spec_info.ylim = [zi(1) 0];
-spec_info.plot_method = 1;
+plot_info.clim = [];
+plot_info.color = 'tempo';
+plot_info.save_path = './figs/length';
+plot_info.clabel = 'length scale ($$m$$)';
+plot_info.ylabel = 'depth (m)';
+plot_info.ylim = [zi(1) 0];
+plot_info.plot_method = 1;
 
-plot_time_depth(time,zi,out.L,spec_info)
+plot_time_depth(time,zi,out.L,plot_info)
 
 hold on 
 line(time,-mld,'LineWidth',.1,'Color',[.3 .2 .1],'LineStyle','--')
 
 set(gca(),'LooseInset', get(gca(),'TightInset')); % no blank edge
-saveas(gcf, spec_info.save_path, 'epsc');
+saveas(gcf, plot_info.save_path, 'epsc');
 
 % clean the white lines in the patch
-epsclean([spec_info.save_path,'.eps'],'closeGaps',true) 
+epsclean([plot_info.save_path,'.eps'],'closeGaps',true) 
 
