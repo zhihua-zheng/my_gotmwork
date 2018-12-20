@@ -78,8 +78,8 @@ dateend="20131201"
 # turbmethod="JHL"
 # turbmethod="EPBL"
 # turbmethod="EPBL-LT"
- turbmethod="SMC"
-# turbmethod="SMCLT"
+# turbmethod="SMC"
+ turbmethod="SMCLT"
 # turbmethod="K-EPSILON-SG"
 
 # output file name
@@ -119,10 +119,10 @@ ${cmd_nmlchange} -f gotmrun.nml -e nlev -v ${nlev}
 ${cmd_nmlchange} -f gotmmean.nml -e ddu -v ${ddu}
 ${cmd_nmlchange} -f gotmmean.nml -e ddl -v ${ddl}
 
-if [[ "${l_relax}" == "true" ]]; then
+if [[ "${l_rel}" == "true" ]]; then
   echo -e "\nadd T_S relaxation for the bulk of the layer \n"
-  ${cmd_nmlchange} -f obs.nml -e SRelaxTauM -v $((dt*nsave))
-  ${cmd_nmlchange} -f obs.nml -e TRelaxTauM -v $((dt*nsave))
+  ${cmd_nmlchange} -f obs.nml -e SRelaxTauM -v $((56*dt*nsave))
+  ${cmd_nmlchange} -f obs.nml -e TRelaxTauM -v $((56*dt*nsave))
 fi
 
 # set turbulence method

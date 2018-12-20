@@ -5,7 +5,7 @@
 % Zhihua Zheng, UW-APL, Sep. 24 2018
 
 
-%% ------------------------------------------------------------------------
+%% Filter -----------------------------------------------------------------
 
 mld = out.mld_surf;
 
@@ -24,16 +24,17 @@ if mld_smooth
     mld = filter(b,a,mld);
 end
 
+%% MLD line plot ----------------------------------------------------------
 
 figure('position', [0, 0, 900, 300])
 line(time,-mld,'LineWidth',.4,'Color',rgb('pinkish'))
 
-spec_info.grid_on = 1;
-spec_info.x_lim = [time(1) time(end)];
-spec_info.y_lim = [];
-spec_info.xlabel = 'time';
-spec_info.ylabel = 'mixed layer depth (m)';
-spec_info.lgd = [];
-spec_info.save_path = './figs/mld';
+plot_info.grid_on = 1;
+plot_info.x_lim = [time(1) time(end)];
+plot_info.y_lim = [];
+plot_info.xlabel = 'time';
+plot_info.ylabel = 'mixed layer depth (m)';
+plot_info.lgd = [];
+plot_info.save_path = './figs/mld';
 
-line_annotate(spec_info)
+line_annotate(plot_info)

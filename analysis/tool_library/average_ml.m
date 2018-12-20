@@ -54,7 +54,7 @@ q_ml = zeros(size(mld));
 for j = 1:length(mld)
     
     h_ml = diff(zi(mld_inx(j):end)); % thickness of cells in mixed layer
-    q_ml(j) = sum(q(mld_inx(j)-1:end,j).*h_ml)./(sum(h_ml));
+    q_ml(j) = nansum(q(mld_inx(j)-1:end,j).*h_ml)./(sum(h_ml));
 end
 
 end

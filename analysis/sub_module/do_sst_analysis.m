@@ -15,15 +15,15 @@ figure('position', [0, 0, 900, 300])
 line(time,sst_from_prof,'LineWidth',.8,'Color',[.6 .4 .2])
 line(time,sst_obs,'LineWidth',.8,'Color',[.3 .6 .4])
 
-spec_info.grid_on = 1;
-spec_info.y_lim = [0 25];
-spec_info.xlabel = 'time';
-spec_info.ylabel = 'sea surface temperature ($$^{\circ}C$$)';
-spec_info.lgd = {'SMCLT','observation'};
-%spec_info.save_path = [];
-spec_info.save_path = './figs/sst_line';
+plot_info.grid_on = 1;
+plot_info.y_lim = [0 25];
+plot_info.xlabel = 'time';
+plot_info.ylabel = 'sea surface temperature ($$^{\circ}C$$)';
+plot_info.lgd = {'SMCLT','observation'};
+%plot_info.save_path = [];
+plot_info.save_path = './figs/sst_line';
 
-line_annotate(spec_info)
+line_annotate(plot_info)
 
 % %%
 % 

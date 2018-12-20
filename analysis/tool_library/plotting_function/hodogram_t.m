@@ -49,19 +49,19 @@ hold off
   h.Label.FontSize = 14;
   set(h,'TickLabelInterpreter','latex','fontsize',9);
     
-spec_info.grid_on = 0;
-spec_info.xlabel = 'u (m/s)';
-spec_info.ylabel = 'v (m/s)';
-spec_info.x_lim = [-u_m u_m];
-spec_info.y_lim = [-v_m v_m];
-spec_info.lgd = [];
+plot_info.grid_on = 0;
+plot_info.xlabel = 'u (m/s)';
+plot_info.ylabel = 'v (m/s)';
+plot_info.x_lim = [-u_m u_m];
+plot_info.y_lim = [-v_m v_m];
+plot_info.lgd = [];
 if save_switch
-    spec_info.save_path = './figs/hodo';
+    plot_info.save_path = './figs/hodo';
 else
-    spec_info.save_path = [];
+    plot_info.save_path = [];
 end
 
-line_annotate(spec_info)
+line_annotate(plot_info)
 
 end
 

@@ -217,7 +217,7 @@ date_vec = datevec(char(date_r));
 % yearday - vectorization issue with function yearday
 % date_vec = [date_vec yd];
 
-yd = date2doy(time_r)-1; % using function date2doy from File Exchange
+yd = date2doy(time_r)-1; % yearday (starts at 1) from 'date2doy'
 %-----------------------
 
 % compute net short wave heat flux

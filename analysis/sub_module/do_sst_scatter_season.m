@@ -125,15 +125,15 @@ ytickangle(45)
 set(gca,'ytick',(1:1:4),'yticklabel',season_str)
 set(gca,'XAxisLocation','top','ydir','reverse');
 
-spec_info.grid_on = 1;
-spec_info.lgd = turb_method;
-spec_info.lgd_pos = 'east';
-spec_info.x_lim = [0.9*min(min(season_rmse)) 1.05*max(max(season_rmse))];
-spec_info.y_lim = [0.5 4.5];
-spec_info.xlabel = 'SST rmse $(^{\circ}C)$';
-spec_info.ylabel = [];
-spec_info.save_path = './figs/season_rmse_sst';
-%spec_info.save_path = [];
+plot_info.grid_on = 1;
+plot_info.lgd = turb_method;
+plot_info.lgd_pos = 'east';
+plot_info.x_lim = [0.9*min(min(season_rmse)) 1.05*max(max(season_rmse))];
+plot_info.y_lim = [0.5 4.5];
+plot_info.xlabel = 'SST rmse $(^{\circ}C)$';
+plot_info.ylabel = [];
+plot_info.save_path = './figs/season_rmse_sst';
+%plot_info.save_path = [];
 
-line_annotate(spec_info)
+line_annotate(plot_info)
 % -------------------------------------------------------------------------

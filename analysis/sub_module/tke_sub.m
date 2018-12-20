@@ -17,8 +17,7 @@ model_par.rescale_r = 1;
 % Note - the TKE components result is messy for OCSPapa simulation!!
 
 % compute components of TKE
-tke_comps = get_tke_comp(model_par,out,1);
-tke_comps(tke_comps<0) = NaN;
+tke_comps = get_tke_comp(model_par,out,0);
 
 % water-side friction velocity square
 u_star2 = out.u_taus.^2;
@@ -28,35 +27,35 @@ u_star = out.u_taus;
 tke_comps_n = tke_comps./(repmat(u_star2',length(zi(2:end-1)),1,3));
 
 %% ----- plot evolution of column -----------------------------------------
-spec_info.ylabel = 'depth ($$m$$)';
-spec_info.clim = [0 nanmax(nanmax(nanmax(tke_comps_n)))];
-%spec_info.clim = [];
-spec_info.clabel = '$$\overline{w^{\prime}w^{\prime}}/u_{*}^{2}$$';
-spec_info.color = 'tempo';
-spec_info.plot_method = 3;
-spec_info.ylim = [zi(1), 0];
-spec_info.save_path = './figs/ww_norm';
+plot_info.ylabel = 'depth ($$m$$)';
+plot_info.clim = [0 nanmax(nanmax(nanmax(tke_comps_n)))];
+%plot_info.clim = [];
+plot_info.clabel = '$$\overline{w^{\prime}w^{\prime}}/u_{*}^{2}$$';
+plot_info.color = 'tempo';
+plot_info.plot_method = 3;
+plot_info.ylim = [zi(1), 0];
+plot_info.save_path = './figs/ww_norm';
 
 % z-direction TKE
-plot_time_depth(time,zi,tke_comps_n(:,:,3),spec_info)
+plot_time_depth(time,zi,tke_comps_n(:,:,3),plot_info)
 
 % downwind-direction TKE
-spec_info.clabel = '$$\overline{u^{\prime}u^{\prime}}/u_{*}^{2}$$';
-spec_info.save_path = './figs/uu_norm';
-plot_time_depth(time,zi,tke_comps_n(:,:,1),spec_info)
+plot_info.clabel = '$$\overline{u^{\prime}u^{\prime}}/u_{*}^{2}$$';
+plot_info.save_path = './figs/uu_norm';
+plot_time_depth(time,zi,tke_comps_n(:,:,1),plot_info)
 
 % crosswind-direction TKE
-spec_info.clabel = '$$\overline{v^{\prime}v^{\prime}}/u_{*}^{2}$$';
-spec_info.save_path = './figs/vv_norm';
-plot_time_depth(time,zi,tke_comps_n(:,:,2),spec_info)
+plot_info.clabel = '$$\overline{v^{\prime}v^{\prime}}/u_{*}^{2}$$';
+plot_info.save_path = './figs/vv_norm';
+plot_time_depth(time,zi,tke_comps_n(:,:,2),plot_info)
 
 % 2*TKE 
 tke_n = 2*out.tke./(repmat(u_star2',length(zi),1));
 
-spec_info.clabel = '$$q^{2}/u_{*}^{2}$$';
-spec_info.save_path = './figs/qq_norm';
-%spec_info.clim = [];
-plot_time_depth(time,zi,tke_n,spec_info)
+plot_info.clabel = '$$q^{2}/u_{*}^{2}$$';
+plot_info.save_path = './figs/qq_norm';
+%plot_info.clim = [];
+plot_time_depth(time,zi,tke_n,plot_info)
 
 %% ---- plot time averaged profiles ---------------------------------------
 
@@ -75,6 +74,7 @@ plot_time_depth(time,zi,tke_n,spec_info)
 % ylim([-2 0])
 
 %% ---- averaged vertical rms velocity .vs. friction velocity -------------
+
 ww_ml = average_ml(mld,tke_comps(:,:,3),zi,mld_smooth);
 w_rms = sqrt(ww_ml);
 
@@ -87,17 +87,17 @@ v_lim = max(max([u_star w_rms]));
 
 inx_good = ~isnan(w_rms);
 sl = u_star(inx_good)\w_rms(inx_good);
-h_fit = plot((0:.01:v_lim),sl*(0:.01:v_lim),'Color',...
+h_fit = plot((0:.01:.15),sl*(0:.01:.15),'Color',...
     rgb('turquoise'),'LineWidth',1.5);
 
 h_ref = refline(1.07,0);
 set(h_ref,'Color',[.2 .2 .2],'LineWidth',1.5,'LineStyle','--');
 
 
-xlim([0 1.15*v_lim])
-ylim([0 1.15*v_lim])
-xticks([0 .05 .1 .15 .2])
-yticks([0 .05 .1 .15 .2])
+xlim([0 .15])
+ylim([0 .15])
+xticks([0 .05 .1 .15])
+yticks([0 .05 .1 .15])
 % boundedline((0:23),hr_tr,hr_tr_error,...
 %     'orientation','vert','alpha','transparency',0.4,'cmap',rand(1,3));
     
@@ -106,8 +106,8 @@ box on
 grid on
 
 lgd = legend([h_fit h_ref],{['slope = ',num2str(round(sl,2))],...
-    'slope = 1.07'},'Location','east');
-set(lgd,'Interpreter','latex','fontsize', 22)
+    'slope = 1.07'},'Location','best');
+set(lgd,'Interpreter','latex','fontsize',22,'color','none')
 
 xlabel('friction velocity $$u_*$$', 'fontname',...
     'computer modern', 'fontsize', 28,'Interpreter', 'latex')

@@ -1,10 +1,10 @@
-function   plot_time_depth(t, d, scalar, spec_info)
+function   plot_time_depth(t, d, scalar, plot_info)
 
 % plot_time_depth
 %==========================================================================
 %
 % USAGE:
-%  plot_time_depth(t, d, scalar, spec_info)
+%  plot_time_depth(t, d, scalar, plot_info)
 %
 % DESCRIPTION:
 %  Function to plot temporal evolution of scalar profile
@@ -14,7 +14,7 @@ function   plot_time_depth(t, d, scalar, spec_info)
 %  t - one dimensional array of date number
 %  d - one dimensional array of depth (deep to shallow)
 %  scalar - two dimensional array of scalar value
-%  spec_info - struct containing additional annotating information
+%  plot_info - struct containing additional annotating information
 %
 % OUTPUT:
 %
@@ -25,27 +25,27 @@ function   plot_time_depth(t, d, scalar, spec_info)
 %
 
 %% determine color value limits -------------------------------------------
-if isempty(spec_info.clim)
+if isempty(plot_info.clim)
     
     CL = [min(min(scalar)) max(max(scalar))];  % default option
-elseif strcmp(spec_info.clim,'symmetric')
+elseif strcmp(plot_info.clim,'symmetric')
     
     tmp1 = min(min(scalar));
     tmp2 = max(max(scalar));
     tmp = max(abs(tmp1), abs(tmp2)); % the one with largest magnitude
     CL = [-tmp tmp];
 else
-    CL = spec_info.clim;
+    CL = plot_info.clim;
 end
 
 %% Plot -------------------------------------------------------------------
-
-conts = (floor(CL(1)):1:ceil(CL(2)));
+cnum = 15;
+conts = linspace(floor(CL(1)),ceil(CL(2)),cnum);
 [T, Z] = meshgrid(t,d);
 
 figure('position', [0, 0, 900, 300])
 
-switch spec_info.plot_method
+switch plot_info.plot_method
     case 1
         contourf(T,Z,scalar,conts,'LineWidth',0.01,'LineStyle','none')
     case 2
@@ -62,32 +62,32 @@ switch spec_info.plot_method
         axis('xy') 
 end
 
-cmocean(spec_info.color)
+cmocean(plot_info.color)
 
 %% Annotation -------------------------------------------------------------
   caxis(CL);
   box on
-  datetick('x',spec_info.timeformat)
-  ylabel(spec_info.ylabel, 'fontname', 'computer modern', 'fontsize', ...
-      14,'Interpreter', 'latex')
-  setDateAxes(gca,'XLim',[t(1) t(end)],'YLim',spec_info.ylim,'fontsize',...
-      11,'fontname','computer modern','TickLabelInterpreter','latex')
+  datetick('x',plot_info.timeformat)
+  ylabel(plot_info.ylabel, 'fontname', 'computer modern', 'fontsize', ...
+      18,'Interpreter', 'latex')
+  setDateAxes(gca,'XLim',[t(1) t(end)],'YLim',plot_info.ylim,'fontsize',...
+      18,'fontname','computer modern','TickLabelInterpreter','latex')
   
   h = colorbar('EastOutside');
-  h.Label.String = spec_info.clabel;
+  h.Label.String = plot_info.clabel;
   h.Label.Interpreter = 'latex';
   h.Label.FontName = 'computer modern';
-  h.Label.FontSize = 14;
-  set(h,'TickLabelInterpreter','latex','fontsize',9);
+  h.Label.FontSize = 20;
+  set(h,'TickLabelInterpreter','latex','fontsize',16);
 
 %% save or not ------------------------------------------------------------
-if ~isempty(spec_info.save_path)
+if ~isempty(plot_info.save_path)
     
   set(gca,'LooseInset', get(gca,'TightInset')); % no blank edge
-  saveas(gcf, spec_info.save_path, 'epsc');
+  saveas(gcf, plot_info.save_path, 'epsc');
   
   % clean the white lines in the patch
-  epsclean([spec_info.save_path,'.eps'],'closeGaps',true) 
+  epsclean([plot_info.save_path,'.eps'],'closeGaps',true) 
 end
 
 end

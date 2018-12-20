@@ -38,13 +38,13 @@
 !                     grid adaptation time scale
 !                     This variable is only used if grid_method = 3
 ! NNnorm            [float]
-!                     normalisation factor for adaptation to buoyancy frequency
+!                     normalization factor for adaptation to buoyancy frequency
 !                     This variable is only used if grid_method = 3
 ! SSnorm            [float]
-!                     normalisation factor for adaptation to shear frequency
+!                     normalization factor for adaptation to shear frequency
 !                     This variable is only used if grid_method = 3
 ! dsurf             [float]
-!                     normalisation factor for adaptation to surface distance
+!                     normalization factor for adaptation to surface distance
 !                     This variable is only used if grid_method = 3
 ! dtgrid            [float]
 !                     time step for grid adaptation (must be fraction of dt)
@@ -64,9 +64,9 @@
 ! avmolu            [float, unit = m^2/s]
 !                     molecular viscosity for momentum
 ! avmolt            [float, unit = m^2/s]
-!                     molecular diffusity for temperature
+!                     molecular diffusivity for temperature
 ! avmols            [float, unit = m^2/s]
-!                     molecular diffusity for salinity
+!                     molecular diffusivity for salinity
 ! MaxItz0b          [integer, minimum = 1, maximum = 1000]
 !                     max # of iterations for z0b as function of u_taub
 ! no_shear          [bool]
@@ -106,4 +106,3 @@
    stokes_coriolis = .false.,
    lagrangian_mixing = .false.,
 /
-

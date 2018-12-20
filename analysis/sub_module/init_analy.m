@@ -10,9 +10,6 @@ clear
 
 [out,data_info] = load_gotm_out();
 
-% simulation info
-turb_method = data_info{3};
-
 % check ./figs folder
 if ~exist('figs/','dir') % if doesn't exist, create one
     mkdir figs
@@ -30,8 +27,7 @@ dt = (time(2) - time(1))*24*3600; % time interval in output [s]
 % dateVec = datevec(char(date));
 
 % yearday from 'date2doy' (File Exchange)
-yd = date2doy(time)-1; % day of year starts as 1
-
+yd = date2doy(time)-1; % day of year output from date2doy starts as 1
 
 z = mean(out.z,2);
 zi = mean(out.zi,2);

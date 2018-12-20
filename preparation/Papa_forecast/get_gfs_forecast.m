@@ -73,7 +73,7 @@ W = complex(gfs.u,gfs.v);
 %% wind stress...  Switch sign to oceanographic convention
 disp('get wind stress ...');
 
-% sign switched to represent surface stress
+% sign switched
 gfs.tau_x = -squeeze(ncread(gfs.url,'uflxsfc',[ilon ilat 1],[1 1 inf])); % ** surface momentum flux, u-component [n/m^2]
 gfs.tau_y = -squeeze(ncread(gfs.url,'vflxsfc',[ilon ilat 1],[1 1 inf])); % ** surface momentum flux, v-component [n/m^2]
 % tau = complex(gfs.tau_x,gfs.tau_y);
@@ -132,7 +132,7 @@ legend('u','v','Sp10');
 title('Wind Speed');
 
 subplot(3,1,3)
-quiver(gfs.time,zeros(size(gfs.time)),-gfs.tau_x,-gfs.tau_y,2,'Marker','.','Color','k','ShowArrowHead','off');
+quiver(gfs.time,zeros(size(gfs.time)),gfs.tau_x,gfs.tau_y,2,'Marker','.','Color','k','ShowArrowHead','off');
 axis equal
 datetick x keeplimits
 title('Stress');

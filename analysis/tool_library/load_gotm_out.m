@@ -59,6 +59,7 @@ else
     
     for i = 1:length(fname) 
         out{i} = read_gotm_out(fname{i},2);
+        out{i}.turb_method = data_info{3};
     end
 end
 
