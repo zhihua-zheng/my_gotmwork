@@ -4,7 +4,7 @@ function La = get_La(u_star,uStokes,vStokes,method,mld,z,h)
 %==========================================================================
 %
 % USAGE:
-%  get_La(u_star,uStokes,vStokes,method,mld,z)
+%  get_La(u_star,uStokes,vStokes,method,mld,z,h)
 %
 % DESCRIPTION:
 %  Function to compute Langmuir number
@@ -14,7 +14,7 @@ function La = get_La(u_star,uStokes,vStokes,method,mld,z,h)
 %  u_star - 1-D vector [t], friction velocity [m/s]
 %  uStokes - 2-D matrix [t,z], x-direction Stokes drift velocity [m/s]
 %  vStokes - 2-D matrix [t,z], y-direction Stokes drift velocity [m/s]
-%  mld - 1-D vector [t], mixed layer depth [m]
+%  mld - 1-D vector [t], mixed layer depth [+,m]
 %  z - 1-D vector [z], depth level for bins in GOTM [m]
 %  h - 1-D vector [z], thickness for bins in GOTM [m]
 %  method - type of Langmuir number being computed

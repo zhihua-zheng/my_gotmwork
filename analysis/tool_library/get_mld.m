@@ -12,19 +12,23 @@ function mld = get_mld(rho, z)
 %
 % INPUT:
 %
-%  rho - 2-D matrix (t,z) containing density profiles
+%  rho - 2-D matrix (z,t) containing density profiles
 %  z - 1-D vector containing vertical coordinates for density profile
 % 
 % OUTPUT:
 %
-%  mld - mixed layer depth [m]
+%  mld - mixed layer depth [+, m]
 %
 %
 % AUTHOR:
 %  Oct. 29 2018. Zhihua Zheng                       [ zhihua@uw.edu ]
 
 sigma = rho - 1000;
-d_sig = 1.01*sigma(end,:);  %% 0.01 criteria
+
+% mld as the shallowest depth where the density is 0.1 kg/m^3 higher than
+% surface density (according to D'Asaro 2001)
+d_sig = sigma(end,:)+0.1; 
+
 mld = zeros(size(d_sig'));
 
 where_mld = sigma - repmat(d_sig,length(z),1);

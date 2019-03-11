@@ -7,7 +7,7 @@
 
 %% set path
 clear
-data_dir = '~/Documents/Study/Graduate_research/data_raw/OCS_P/CDIP_Wave';
+data_dir = '~/Documents/Study/Grad_research/data/OCSP/CDIP_Wave';
 f_name = '166p1_historic.nc';
 file = [data_dir '/' f_name];
 
@@ -17,13 +17,15 @@ wave_time = ncread(file,'waveTime'); % wave time in UTC
 wave_time = double(wave_time);
 wave_freq = ncread(file,'waveFrequency'); % band center frequency (hertz)
 wave_freq = double(wave_freq);
-wave_bw = ncread(file,'waveBandwidth'); % frequency bandwidth (hertz)
-wave_spec = ncread(file,'waveEnergyDensity'); % band energy density (m^2/hertz)
-wave_mdir = ncread(file,'waveMeanDirection'); 
+wave_bw   = ncread(file,'waveBandwidth'); % frequency bandwidth (hertz)
+
+% spectral energy density (m^2/hertz)
+wave_spec = ncread(file,'waveEnergyDensity'); 
+
 % band mean direction (from), in degree clockwise from the true North
+wave_mdir = ncread(file,'waveMeanDirection'); 
 
 %% timestamp
-
 
 % get the reference time
 t_ref = ncreadatt(file,'waveTime','units'); % get the attribute 'units' for 'time'
@@ -44,5 +46,5 @@ wave_mdir = 90-(180+wave_mdir);
 %% save
 
 clear data_dir f_name file
-save('wave_p2010.mat');
+save('~/Documents/Study/Grad_research/data/OCSP/CDIP_Wave/wave_2010.mat');
 

@@ -77,7 +77,7 @@ out.ea = double(squeeze(ncread(fname,'ea',[1 1 2],[Inf Inf Inf]))); % actual wat
 out.qs = double(squeeze(ncread(fname,'qs',[1 1 2],[Inf Inf Inf]))); % saturation specific humidity
 out.qa = double(squeeze(ncread(fname,'qa',[1 1 2],[Inf Inf Inf]))); % specific humidity
 
-% heat_fluxes
+% surface_heat_fluxes
 out.heat = double(squeeze(ncread(fname,'heat',[1 1 2],[Inf Inf Inf]))); % net surface heat flux [W/m^2]
 out.qe = double(squeeze(ncread(fname,'qe',[1 1 2],[Inf Inf Inf]))); % sensible heat flux [W/m^2]
 out.qh = double(squeeze(ncread(fname,'qh',[1 1 2],[Inf Inf Inf]))); % latent heat flux [W/m^2]

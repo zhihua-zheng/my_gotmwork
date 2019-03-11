@@ -20,8 +20,7 @@ bad_P = find(P>10000);
 
 
 ncvars =  {'lat', 'lon', 'SLP', 'time'};
-merra_dir = ['~/Documents/Study/GraduteResearch/Data/OCS_P/',...
-    'Met_Forcing/original_data_2007/MERRA/slp'];
+merra_dir = '~/Documents/Study/Grad_research/data/OCSP/Mooring/original_data_2007/MERRA/slp';
 dinfo = dir(fullfile(merra_dir,'*.nc'));
 num_files = length(dinfo);
 filenames = fullfile(merra_dir,{dinfo.name});
@@ -65,8 +64,7 @@ bad_sst = find(sst>10000);
 
 
 ncvars =  {'lat', 'lon', 'TSKINWTR', 'time'};
-merra_dir = ['~/Documents/Study/GraduteResearch/Data/OCS_P', ...
-    '/Met_Forcing/original_data_2007/MERRA/rain_skin_t'];
+merra_dir = '~/Documents/Study/Grad_research/data/OCSP/Mooring/original_data_2007/MERRA/rain_skin_t';
 dinfo = dir(fullfile(merra_dir,'*.nc'));
 num_files = length(dinfo);
 filenames = fullfile(merra_dir,{dinfo.name});
@@ -110,8 +108,7 @@ bad_rain = [bad_rain; (length(time_rain)+1:length(time))'];
 % incoporate the period after the last observation record of rain rate
 
 ncvars =  {'lat', 'lon', 'RAINOCN', 'time'};
-merra_dir = ['~/Documents/Study/GraduteResearch/Data/OCS_P', ...
-    '/Met_Forcing/original_data_2007/MERRA/rain_skin_t'];
+merra_dir = '~/Documents/Study/Grad_research/data/OCSP/Mooring/original_data_2007/MERRA/rain_skin_t';
 dinfo = dir(fullfile(merra_dir,'*.nc'));
 num_files = length(dinfo);
 filenames = fullfile(merra_dir,{dinfo.name});

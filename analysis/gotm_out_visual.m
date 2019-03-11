@@ -33,6 +33,7 @@ plot(time,-mld,'Color',rgb('pinkish'),'LineWidth',.1)
 
 saveas(gcf,'./figs/mld_on_tke','fig');
 
+% mld_d = get_mld(out.rho,z);
 
 %% Potential Energy (PE)
 
@@ -231,3 +232,43 @@ saveas(gcf, plot_info.save_path, 'epsc');
 % clean the white lines in the patch
 epsclean([plot_info.save_path,'.eps'],'closeGaps',true) 
 
+%% Langmuir number & Langmuir Stability Length (Belcher et. al 2012)
+
+% analogue of Obukhov length for convective-Langmuir turbulence as L_b
+u_star   = out.u_taus;
+u_stokes = out.u_stokes;
+v_stokes = out.v_stokes;
+
+La_t = get_La(u_star,u_stokes,v_stokes,1,[],[],[]);
+La_sl = get_La(u_star,u_stokes,v_stokes,2,mld,z,h);
+
+Bs = out.Pb(end-1,:)'; % surface buoyancy flux
+St_surf = sqrt(u_stokes(end,:).^2 + v_stokes(end,:).^2)';
+
+h_over_Lb = (Bs .* mld)./(u_star.^2 .* St_surf); % H_ml/L_b
+
+% dominant cases
+% p_d = 0.9;
+% x_L = linspace(1,10,50);
+% y_L = 1/p_d - 1 - x_L; % Langmuir turbulence dominace
+% 
+% x_C = linspace(0.1,10,50);
+% y_C = (1 + x_C)*p_d*10; % Convective turbulence dominace
+% 
+% x_S = linspace(0.1,0.3,50);
+% y_S = x_S/(p_d*10) - 1; % Shear turbulence dominace
+
+%% Plot diagram for turbulence regimes 
+figure('position', [0, 0, 500, 460])
+
+% line(x_L,y_L,'Color','k','LineWidth',2)
+% line(x_C,y_C,'Color','k','LineWidth',2)
+% line(x_S,y_S,'Color','k','LineWidth',2)
+scatter(La_t(h_over_Lb>0),h_over_Lb(h_over_Lb>0),20,'filled')
+
+set(gca,'Yscale','log')
+set(gca,'Xscale','log')
+% ylim([1e-3 1e3])
+xlim([1e-1 1])
+box on
+grid on

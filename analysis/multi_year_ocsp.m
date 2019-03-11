@@ -68,30 +68,38 @@ cd(main_dir)
 save('ocsp_years','out_all','start_date','turb_method','rho_obs',...
     'rho_obs_z','rho_obs_time','-v7.3');
 
+%% Load prepared data directly, no need to run the code before this line
+
+load ocsp_years
+
 %% read variables
-all_sst = cell(size(out_all));
-all_sst_obs = cell(size(out_all));
+
+z_model  = cell(size(out_all));
+t_model  = cell(size(out_all));
 all_time = cell(size(out_all));
 all_date = cell(size(out_all));
 
-% compute mld based on density profile (0.1*sigma)
-all_rho = cell(size(out_all));
+all_sst     = cell(size(out_all));
+all_sst_obs = cell(size(out_all));
+
+all_rho     = cell(size(out_all));
+all_rho_obs = cell(size(out_all)); % actually is sigma
 
 for i = 1:size(out_all,1)
     for j = 1:size(out_all,2)
         
          all_sst{i,j} = out_all{i,j}.temp(128,:)';
+         
+         % sst_obs from model output, not sure if it's creditable
          all_sst_obs{i,j} = out_all{i,j}.sst_obs; 
+         
          all_time{i,j} = out_all{i,j}.time;
          all_date{i,j} = datevec(char(out_all{i,j}.date));
          all_rho{i,j} = out_all{i,j}.rho;
     end
 end
 
-all_rho_obs = cell(size(out_all));
-z_model = cell(size(out_all));
-t_model = cell(size(out_all));
-
+% Interpolate the obs. density profiles to vertical levels in model 
 for i = 1:size(out_all,1)
     for j = 1:size(out_all,2)
         
@@ -116,16 +124,18 @@ end
 clear tmp first_point first_inx last_point last_inx F T Z
 
 %% Mixed layer depth
-all_mld = cell(size(out_all));
+
+all_mld     = cell(size(out_all));
 all_mld_obs = cell(size(out_all));
 
 for i = 1:size(out_all,1)
     for j = 1:size(out_all,2)
     
-        % 48-hr running mean
-        all_mld{i,j} = movmean(get_mld(all_rho{i,j},mean(out_all{i,j}.z,2)),16);
+        % 48-hr running mean - 3 hours (180*6) interval in output
+        all_mld{i,j}     = movmean(get_mld(all_rho{i,j},...
+                             mean(out_all{i,j}.z,2)),3);       
         all_mld_obs{i,j} = movmean(get_mld(1000+all_rho_obs{i,j},...
-            mean(z_model{i,j},2)),16);
+                             mean(z_model{i,j},2)),3);
     end
 end
 
@@ -308,4 +318,5 @@ set(gca,'fontsize',20,'fontname','computer modern','gridlinestyle','--',...
 
 export_fig('./figs/w_ustar','-eps','-transparent','-painters')
 
+%% Langmuir number
 

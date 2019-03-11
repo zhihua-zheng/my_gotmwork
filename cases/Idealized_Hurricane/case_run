@@ -12,6 +12,8 @@ source "../../set_tools.sh"
 
 # directory of base case
 basecase="${GOTMWORK_ROOT}/data/Idealized_Hurricane"
+cd ${basecase}
+source ./update_nml_IH
 
 #######################################################################
 #                           Set parameters                            #
@@ -70,15 +72,18 @@ fi
 
 cd ${rundir}
 
-if [ -z "$(ls -A ${rundir})" ]; then
-  # copy base case if the directory is empty
-  cp -r ${basecase}/* ./
-fi
+# link the input data from base case
+ln -s ${basecase}/sprof_file.dat ./sprof_file.dat
+ln -s ${basecase}/tprof_file.dat ./tprof_file.dat
+ln -s ${basecase}/Depth.txt ./Depth.txt
 
-# set turbulence method
+# update the namelist, test case level specification
+cp ${basecase}/*.nml ./
+
+# set turbulence method, turbmethod level specification
 source ${scpt_case_turbmethod}
 
-# set run parameters
+# set run parameters, run level specification
 start_time="${datestart:0:4}-${datestart:4:2}-${datestart:6:2} 00:00:00"
 stop_time="${dateend:0:4}-${dateend:4:2}-${dateend:6:2} 00:00:00"
 ${cmd_nmlchange} -f gotmrun.nml -e start -v "${start_time}"

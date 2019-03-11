@@ -8,7 +8,7 @@
 %% read variables from netCDF files
 
 clear
-data_dir = '~/Documents/Study/GraduteResearch/Data/OCS_P/Met_Forcing/original_data_2007/';
+data_dir = '~/Documents/Study/Grad_research/data/OCSP/Mooring/original_data_2007/';
 
 lat = ncread([data_dir,'w50n145w_hr.cdf'],'lat');
 lon = ncread([data_dir,'w50n145w_hr.cdf'],'lon');
@@ -37,12 +37,12 @@ dn2007_rain = datenum(2007,6,8,4,0,0);
 
 %% read profiles from netCDF files
 
-depth_s = ncread([data_dir,'s50n145w_hr.cdf'],'depth');
-sprof = ncread([data_dir,'s50n145w_hr.cdf'],'S_41');
-depth_t = ncread([data_dir,'t50n145w_hr.cdf'],'depth');
-tprof = ncread([data_dir,'t50n145w_hr.cdf'],'T_20');
-depth_rho = ncread([data_dir,'d50n145w_hr.cdf'],'depth');
-rhoprof = ncread([data_dir,'d50n145w_hr.cdf'],'STH_71');
+depth_s = ncread([data_dir,'/profiles/','s50n145w_hr.cdf'],'depth');
+sprof = ncread([data_dir,'/profiles/','s50n145w_hr.cdf'],'S_41');
+depth_t = ncread([data_dir,'/profiles/','t50n145w_hr.cdf'],'depth');
+tprof = ncread([data_dir,'/profiles/','t50n145w_hr.cdf'],'T_20');
+depth_rho = ncread([data_dir,'/profiles/','d50n145w_hr.cdf'],'depth');
+rhoprof = ncread([data_dir,'/profiles/','d50n145w_hr.cdf'],'STH_71');
 
 % uprof_adcp = ncread('adcp50n145w_mon.cdf'],'u_1205');
 % vprof_adcp = ncread('adcp50n145w_mon.cdf'],'v_1206');
@@ -143,5 +143,4 @@ date_pcur = string(date_cur);
 %% Save
 
 clear data_dir
-
-save('met_forcing_p2007.mat');
+save('~/Documents/Study/Grad_research/data/OCSP/Mooring/forcing_IC_2007.mat');

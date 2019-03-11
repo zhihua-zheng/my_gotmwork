@@ -2,7 +2,7 @@
 %
 % make forcing files for new GOTM OCSPapa test case
 %
-% by Zhihua Zheng (UW/APL), updated on Jun. 15 2018
+% Zhihua Zheng, UW-APL, updated on Jun. 15 2018
 % 
 % load meteological observation data from PMEL OWS P station mooring
 % -------------------------------------------------------------------------
@@ -58,11 +58,13 @@
 %% Load the Met. forcing and wave data
 
 clear
-% load the whole workspace as a struct
-met_data = load('met_forcing_p2007.mat'); 
+data_dir = '~/Documents/Study/Grad_research/data/OCSP/';
 
-load('met_forcing_p2007.mat')
-load('wave_p2010.mat')
+% load the whole workspace as a struct
+met_data = load([data_dir,'Mooring/forcing_IC_2007.mat']); 
+
+load([data_dir,'Mooring/forcing_IC_2007.mat'])
+load([data_dir,'CDIP_Wave/wave_2010.mat'])
 
 % set the negative values of rain data to zeros
 rain(rain<0) = 0;
@@ -195,6 +197,7 @@ A = coare35vn(w_spd_r,z_wind,t_air_r,z_ta,rh_r,z_rh,P_r,sst_r,Rs_r,...
 tau = A(:,2);
 hsb = A(:,3); % sensible heat flux
 hlb = A(:,4); % latent heat flux
+hbb = A(:,5); % surface buoyancy flux (positive out)
 u10 = A(:,29); % wind speed adjusted to 10 m
 
 w_cos = w_u_r./w_spd_r;
@@ -235,6 +238,7 @@ nlw = lwhf(sst_r,Rl_r,Rs_r);
 % flux are omitted)
 hf = -hlb - hsb + nlw;
 
+save('~/Documents/Study/Grad_research/data/OCSP/Mooring/hbb.mat','hbb','time_r')
 
 %% Compute Wave Spectrum (frequency bin width weighted)
 

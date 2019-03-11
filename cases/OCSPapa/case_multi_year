@@ -1,7 +1,7 @@
 #!/bin/bash
-# Run GOTM using preprocessed data for OCS Papa
-# Require a base case which contains the preprocessed input data
-# and namelist, e.g., as a result of case_test
+# Run GOTM using pre-processed data for OCS Papa
+# Require a base case containing all the necessary input data
+# and namelists, e.g., as a result of case_test
 #
 # Zhihua Zheng, 20181016
 
