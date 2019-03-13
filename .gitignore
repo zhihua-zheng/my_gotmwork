@@ -20,6 +20,7 @@ cases/*/*.xml
 
 # ignore input data
 data/
+*.mat
 
 # ignore figures
 preparation/Papa/output_figs/
