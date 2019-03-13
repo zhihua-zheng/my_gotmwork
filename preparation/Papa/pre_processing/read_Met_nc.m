@@ -1,7 +1,7 @@
-%% read_Met_nc.m
+%% read_Met_nc
 %
 % This the script used to read the information from meterological focing
-% files and the generated workspace is named as 'met_forcing_p2007.mat'.
+% files and the generated workspace is named as 'forcing_IC_2007.mat'.
 
 % by Zhihua Zheng (UW/APL), updated on Jun. 15 2018
 

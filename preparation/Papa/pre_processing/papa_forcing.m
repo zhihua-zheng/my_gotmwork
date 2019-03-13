@@ -192,7 +192,7 @@ tprof_r = gsw_pt0_from_t(sprof_r,tprof_depth_s,Z_s);
 A = coare35vn(w_spd_r,z_wind,t_air_r,z_ta,rh_r,z_rh,P_r,sst_r,Rs_r,...
     Rl_r,lat,NaN,rain_r,NaN,NaN);
 % note we should use relative velocity when I have time to do that, but
-% does it mattet? I don't have good surface current measurement record.
+% does it matter? I don't have good surface current measurement record.
 
 tau = A(:,2);
 hsb = A(:,3); % sensible heat flux
@@ -228,8 +228,7 @@ nsw = swhf(yd,date_vec(:,1),(360-lon)*ones(size(time_r)),...
     lat*ones(size(time_r)),Rs_r);
 %---- Need to change the longitude into format of West positive degree
 %---- Note the operating time in the subroutine of swhf, soradna1 (no-sky
-% solar radiation) is in UTC format, therefore the time zone shifting must 
-% be perfomed after here.
+% solar radiation) is in UTC format.
 
 % compute net long wave heat flux
 nlw = lwhf(sst_r,Rl_r,Rs_r);
@@ -431,9 +430,6 @@ for i = 1:size(wave_time,1)
 end
 
 fclose(fileID);
-
-gzip('../setup_files/spec_file.dat')
-delete('../setup_files/spec_file.dat')
 
 %% visualization of flux time series for comparison
 
