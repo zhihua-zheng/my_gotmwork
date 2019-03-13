@@ -3,8 +3,9 @@ My own copy of working with GOTM simulation, forked from [Fox-Kemper Lab](https:
 * To make the tools and paths accessible everywhere regardless of `pwd`:
 
   * `ln -s <path to gotmwork repo>/set_tools.sh /usr/local/bin/set_tools_gotm`
-  * `source set_tools_gotm` will then activate the paths and tools.
+  * `source set_tools_gotm` will then activate the paths and tools
 
+---
 A work directory of [GOTM](http://gotm.net), which contains a set of scripts and tools to preprocess the input data, set up runs, and analyze and visualize the output data.
 
 __Latest version__: lt_v1.5, compatible with [GOTM version lt_v1.5.x](https://gitlab.com/fox-kemper_lab/gotm) and [CVMix version lt_v1.3](https://gitlab.com/fox-kemper_lab/CVMix-src).

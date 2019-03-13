@@ -54,6 +54,7 @@ t_ref = ncreadatt(TSname,'TIME','units'); % attribute 'units' for 'TIME'
 t_ref = t_ref(12:end); % truncate to get the time string
 t_ref = datenum(t_ref, 'yyyy-mm-ddTHH:MM:SSZ');
 time_TS = t_ref + time; 
+clear time t_ref
 
 depth_TS = ncread(TSname,'DEPTH');
 temp     = ncread(TSname,'TEMP');
@@ -65,33 +66,41 @@ salt     = ncread(TSname,'PSAL');
 load([WDSname,'fre']); % 1st bin is for noise, last 3 are dummy 0's
 
 WDSfiles = dir(WDSname);
-WDSfiles = WDSfiles(3:end);
+WDSfiles = WDSfiles(3:end-1);
 
 n_WDS = length(WDSfiles);
 n_f   = length(df);
 g     = 9.81;
 
 time_WDS = zeros(n_WDS,1);
-f_Spec   = zeros(n_f,n_WDS); 
-xcmp     = zeros(n_f,n_WDS); % x-direction component
-ycmp     = zeros(n_f,n_WDS); % y-direction component
+spec_h2  = zeros(n_f,n_WDS); 
+xcmp     = zeros(n_f,n_WDS); % fraction for x-direction component
+ycmp     = zeros(n_f,n_WDS); % fraction for y-direction component
 
-for j = 1:n_wave
+for j = 1:n_WDS
     
-    WDS = load(WDSfiles(j).name);
+    WDS = load([WDSname,WDSfiles(j).name]);
     
-    f_Spec(:,j) = WDS.c11; % 1-D frequency spectrum = a_0 * \PI, [m^2*s]
     time_WDS(j) = WDS.mday;
-    xcmp(:,j)   = sind(WDS.alpha1);
-    ycmp(:,j)   = cosd(WDS.alpha1);
+    
+    % wave mean direction, switched to degree counter-clockwise from East,
+    % pointing to where the waves are propagating toward
+    wave_mdir   = 90 - (180 + WDS.alpha1); 
+    xcmp(:,j)   = cosd(wave_mdir);
+    ycmp(:,j)   = sind(wave_mdir);
+    
+%     dU_St = 16*pi^3/g * WDS.c11 .* WDS.R1 .* f_ctr.^3 .* xcmp(:,j) .* df;
+%     dV_St = 16*pi^3/g * WDS.c11 .* WDS.R1 .* f_ctr.^3 .* ycmp(:,j) .* df;
 
-    % Stokes spectra density dU_st/df, 
-    %  wave direction is recorded as where the waves were coming from, in 
-    %  degree clockwise from the true North
-    dSt_x = -16*pi^3/g * WDS.c11 .* f_ctr.^3 .* WDS.R1 .* xcmp(:,j);
-    dSt_y = -16*pi^3/g * WDS.c11 .* f_ctr.^3 .* WDS.R1 .* ycmp(:,j);
+    % wave spectrum
+    spec_h2(:,j) = WDS.c11 .* WDS.R1 .* df;
 
 end
+
+f_ctr   = f_ctr(1:end-3);
+xcmp    = xcmp(1:end-3,:);
+ycmp    = ycmp(1:end-3,:);
+spec_h2 = spec_h2(1:end-3,:);
 
 %-- Note: all time in UTC
 
@@ -131,25 +140,55 @@ nhf = hsb + hlb + nlw;
 
 %% TS profiles interpolation 
 
-[~,hr_inx] = ismember(time_MF,time_TS);
+% [~,hr_inx] = ismember(time_MF,time_TS);
+% 
+% % get hourly profiles from original 5-mins data
+% temp_hr = temp(:,hr_inx);
+% salt_hr = salt(:,hr_inx);
+% 
+% % vertically interpolate to fill gaps
+% temp_r = vert_fill(temp_hr,depth_TS);
+% salt_r = vert_fill(salt_hr,depth_TS);
 
-% get hourly profiles from original 5-mins data
-temp_hr = temp(:,hr_inx);
-salt_hr = salt(:,hr_inx);
+%% Project all data to WDS timeframe
+
+indx  = find(time_WDS<time_MF(end),1,'last');
+time  = time_WDS(1:indx);
+
+tau_x = interp1(time_MF, tau_x, time);
+tau_y = interp1(time_MF, tau_y, time);
+nhf   = interp1(time_MF, nhf,   time);
+nsw   = interp1(time_MF, nsw,   time);
+Rain  = interp1(time_MF, Rain,  time);
+T_s   = interp1(time_MF, T_s,   time);
+S_s   = interp1(time_MF, S_s,   time);
+
+% I don't know if initial condition should have same timeframe as forcing,
+% but I'll make them the same anyway.
+
+% T-S profiles for writing out, in WDS timeframe
+temp_o = zeros(length(depth_TS),length(time));
+salt_o = zeros(length(depth_TS),length(time));
+
+for i = 1:length(depth_TS)
+    
+    temp_o(i,:) = interp1(time_TS, temp(i,:), time);
+    salt_o(i,:) = interp1(time_TS, salt(i,:), time);
+end
 
 % vertically interpolate to fill gaps
-temp_r = vert_fill(temp_hr,depth_TS);
-salt_r = vert_fill(salt_hr,depth_TS);
+temp_o = vert_fill(temp_o,depth_TS);
+salt_o = vert_fill(salt_o,depth_TS);
 
 %% Write out to files
 
 basecase = '../../data/SPURSI/';
 
-date_MF = string(datestr(time_MF, 'yyyy-mm-dd HH:MM:SS'));
+date = string(datestr(time, 'yyyy-mm-dd HH:MM:SS'));
 
 %--------------------------------------------------------------------------
 fileID = fopen([basecase,'tau_file.dat'],'w');
-H = [cellstr(date_MF) num2cell(tau_x) num2cell(tau_y)];
+H = [cellstr(date) num2cell(tau_x) num2cell(tau_y)];
 formatSpec = '%s  % 8.6e % 8.6e\n';
 
 for i = 1:size(H,1)
@@ -162,7 +201,7 @@ fclose(fileID);
 
 %--------------------------------------------------------------------------
 fileID = fopen([basecase,'heatflux_file.dat'],'w');
-H = [cellstr(date_MF) num2cell(nhf)];
+H = [cellstr(date) num2cell(nhf)];
 formatSpec = '%s   % 8.6e\n';
 
 for i = 1:size(H,1)
@@ -175,7 +214,7 @@ fclose(fileID);
 
 %--------------------------------------------------------------------------
 fileID = fopen([basecase,'precip_file.dat'],'w');
-H = [cellstr(date_MF) num2cell(Rain)];
+H = [cellstr(date) num2cell(Rain)];
 formatSpec = '%s   % 8.6e\n';
 
 for i = 1:size(H,1)
@@ -188,7 +227,7 @@ fclose(fileID);
 
 %--------------------------------------------------------------------------
 fileID = fopen([basecase,'sst_file.dat'],'w');
-H = [cellstr(date_MF) num2cell(T_s)];
+H = [cellstr(date) num2cell(T_s)];
 formatSpec = '%s %6.3f\n';
 
 for i = 1:size(H,1)
@@ -201,7 +240,7 @@ fclose(fileID);
 
 %--------------------------------------------------------------------------
 fileID = fopen([basecase,'sss_file.dat'],'w');
-H = [cellstr(date_MF) num2cell(S_s)];
+H = [cellstr(date) num2cell(S_s)];
 formatSpec = '%s %6.3f\n';
 
 for i = 1:size(H,1)
@@ -214,7 +253,7 @@ fclose(fileID);
 
 %--------------------------------------------------------------------------
 fileID = fopen([basecase,'swr_file.dat'],'w');
-H = [cellstr(date_MF) num2cell(nsw)];
+H = [cellstr(date) num2cell(nsw)];
 formatSpec = '%s  % 8.6e\n';
 
 for i = 1:size(H,1)
@@ -228,10 +267,10 @@ fclose(fileID);
 %--------------------------------------------------------------------------
 fileID = fopen([basecase,'sprof_file.dat'],'w');
 
-for i = 1:size(time_MF,1)
+for i = 1:size(time,1)
     
-    fprintf(fileID,'%s  37  2\n',date_MF(i));
-    fprintf(fileID,'%6.1f   %9.6f\n',[-depth_TS'; salt_r(:,i)']);
+    fprintf(fileID,'%s  37  2\n',date(i));
+    fprintf(fileID,'%6.1f   %9.6f\n',[-depth_TS'; salt_o(:,i)']);
 end
 
 fclose(fileID);
@@ -241,10 +280,10 @@ fclose(fileID);
 %--------------------------------------------------------------------------
 fileID = fopen([basecase,'tprof_file.dat'],'w');
 
-for i = 1:size(time_MF,1)
+for i = 1:size(time,1)
     
-    fprintf(fileID,'%s  37  2\n',date_MF(i));
-    fprintf(fileID,'%6.1f   %9.6f\n',[-depth_TS'; temp_r(:,i)']);
+    fprintf(fileID,'%s  37  2\n',date(i));
+    fprintf(fileID,'%6.1f   %9.6f\n',[-depth_TS'; temp_o(:,i)']);
 end
 
 fclose(fileID);
@@ -254,11 +293,14 @@ fclose(fileID);
 %--------------------------------------------------------------------------
 fileID = fopen([basecase,'spec_file.dat'],'w');
 
-for i = 1:size(time_WDS,1)
+for i = 1:size(time,1)
     
-    fprintf(fileID,'%s  64  1\n',wave_date(i));
-    fprintf(fileID,'%10.5f   %8.6e   %8.6e   %8.6e\n',...
+    fprintf(fileID,'%s  47  4\n',date(i));
+    fprintf(fileID,'%10.5f   %8.6e   % 8.6e   % 8.6e\n',...
         [f_ctr'; spec_h2(:,i)'; xcmp(:,i)'; ycmp(:,i)']);
 end
 
 fclose(fileID);
+
+gzip([basecase,'spec_file.dat'])
+delete([basecase,'spec_file.dat'])
