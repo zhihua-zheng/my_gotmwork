@@ -1,4 +1,4 @@
-function La = get_La(u_star,uStokes,vStokes,method,mld,z,h)
+function [La,uSt_sl] = get_La(u_star,uStokes,vStokes,method,mld,z,h)
 %
 % get_La
 %==========================================================================
@@ -24,6 +24,7 @@ function La = get_La(u_star,uStokes,vStokes,method,mld,z,h)
 % OUTPUT:
 %
 %  La - nondimensional Langmuir number
+%  uSt_sl - surface layer averaged Stokes drift (optional output)
 %
 % AUTHOR:
 %  December 19 2018. Zhihua Zheng                       [ zhihua@uw.edu ]

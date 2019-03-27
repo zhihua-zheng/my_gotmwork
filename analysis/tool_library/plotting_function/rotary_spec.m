@@ -45,8 +45,8 @@ hold off
 
 % call 'line_annotate.m' to add figure details
 plot_info.grid_on = 1;
-plot_info.xlabel = 'frequency (cycle per day)';
-plot_info.ylabel = 'PSD ($$(m/s)^2/cpd$$)';
+plot_info.xlabel = 'frequency [ cycle per day ]';
+plot_info.ylabel = 'PSD [ $$(m^2/s^2)/cpd$$ ]';
 plot_info.x_lim = [f(1) f(n/2)];
 plot_info.y_lim = [];
 plot_info.lgd = {'counter clockwise', 'clockwise'};

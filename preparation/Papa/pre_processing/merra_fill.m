@@ -1,40 +1,69 @@
-%% merra_fill
+function [P_r,sst_r,rain_r] = merra_fill(P,sst,rain,lat,lon,time)
 
-% subrountine used to fill the large gaps in meteorological measurements
-% from PMEL ocean climate station Papa mooring, using reanalysis product
-% from MERRA2 (https://gmao.gsfc.nasa.gov/reanalysis/MERRA-2/data_access/)
+% merra_fill
+%==========================================================================
+%
+% USAGE:
+%  [P_r,sst_r,rain_r] = merra_fill(P,sst,rain,lat,lon,time)
+%
+% DESCRIPTION:
+%  Function to fill the large gaps in meteorological measurements
+%    from PMEL OCSPapa mooring, using reanalysis product
+%    MERRA2 (https://gmao.gsfc.nasa.gov/reanalysis/MERRA-2/data_access/)
+%
+%  ocean rainfall and open water skin temperature are from Ocean Surface
+%  Diagnostics dataset 'tavg1_2d_ocn_Nx'.
+%
+%  sea level pressure is from Single-Level Diagnostics dataset
+%  'inst1_2d_asm_Nx'.
+%
+% INPUT:
+%
+%  P    - 1-D vector, time series of observed air pressure [hPa]
+%  sst  - 1-D vector, time series of observed sea surface temp. [C]
+%  rain - 1-D vector, time series of observed rain rate [mm/hr]
+%  lat  - scalar, latitude  of buoy site (-90 ~ 90 )
+%  lon  - scalar, longitude of buoy site (  0 ~ 360)
+%  time - 1-D vector, timestamp of observation time series
+%
+% OUTPUT:
+%
+%  P_r    - 1-D vector, air pressure with gap filled [hPa]
+%  sst_r  - 1-D vector, sea surface temp. with gap filled [C]
+%  rain_r - 1-D vector, rain rate with gap filled [mm/hr]
+%
+% AUTHOR:
+%  Jun. 21 2018. Zhihua Zheng                       [ zhihua@uw.edu ]
+%  Mar. 26 2019. converted to function
+%==========================================================================
 
-% ocean rainfall and open water skin temperature are from Ocean Surface
-% Diagnostics dataset 'tavg1_2d_ocn_Nx'.
+%% General setting
 
-% sea level pressure is from Single-Level Diagnostics dataset
-% 'inst1_2d_asm_Nx'.
+merra_dir = '~/Documents/Study/Grad_research/data/OCSP/MERRA';
 
-% by Zhihua Zheng (UW/APL), updated on Jun. 21 2018
+P_r    = P;
+sst_r  = sst;
+rain_r = rain;
 
-%% slp
+%% Sea level pressure
 
-% large gap in barometric pressure after pre_day (Mar. 2010 - Nov.2010)
 bad_P = find(P>10000);
-% the index of outliers in P time series
 
-
-ncvars =  {'lat', 'lon', 'SLP', 'time'};
-merra_dir = '~/Documents/Study/Grad_research/data/OCSP/Mooring/original_data_2007/MERRA/slp';
-dinfo = dir(fullfile(merra_dir,'*.nc'));
-num_files = length(dinfo);
+ncvars =  {'lat','lon','SLP','time'};
+dinfo = dir(fullfile(merra_dir,'/slp/*.nc'));
+nFile = length(dinfo);
 filenames = fullfile(merra_dir,{dinfo.name});
 
 lat_merra = ncread(filenames{1}, ncvars{1});
 lon_merra = ncread(filenames{1}, ncvars{2});
 
-slp = zeros(length(lat_merra),length(lon_merra),24*num_files)*NaN;
-time_slp = zeros(24*num_files,1)*NaN;
+slp      = nan(length(lat_merra),length(lon_merra),24,nFile);
+t_merra  = nan(24,nFile);
 
-for K = 1:24:(24*num_files-23)
+for K = 1:nFile
 
-  this_file = filenames{ceil(K/24)};
-  slp(:,:,K:K+23) = ncread(this_file, ncvars{3});
+  this_file = filenames{K};
+  slp(:,:,:,K) = ncread(this_file, ncvars{3});
 
   % get the reference time
   t_ref = ncreadatt(this_file,'time','units'); % get the attribute 'units' for 'time'
@@ -42,108 +71,68 @@ for K = 1:24:(24*num_files-23)
   t_ref = datenum(t_ref, 'yyyy-mm-dd HH:MM:SS');
 
   % date numbers for the timestamp
-  time_slp(K:K+23) = double(ncread(this_file, ncvars{4}))/(60*24) + t_ref;
+  t_merra(:,K) = double(ncread(this_file, ncvars{4}))/60/24 + t_ref;
 
 end
 
-% date_slp = string(datestr(time_slp,'yyyy/mm/dd HH:MM:SS'));
-[X_merra, Y_merra, Z_merra] = meshgrid(lon_merra,lat_merra,time_slp);
+[X_merra, Y_merra, Z_merra] = meshgrid(lon_merra,lat_merra,t_merra(:));
+slp = slp(:,:,:);
 
-% interpolate to get the sea level pressure time series at buoy site
+% interpolate to get the barometric pressure at buoy site
 slp_papa = interp3(X_merra,Y_merra,Z_merra,slp,...
     (lon-360)*ones(size(bad_P)),lat*ones(size(bad_P)),time(bad_P))/100;
-% the unit for sea level pressure in merra is Pa
+% unit for sea level pressure in merra is Pa
 
-P_r = P;
 P_r(bad_P) = slp_papa;
 
+%% open_water_skin_temperature and ocean_rain_fall
 
-%% sst
-
-bad_sst = find(sst>10000);
-
-
-ncvars =  {'lat', 'lon', 'TSKINWTR', 'time'};
-merra_dir = '~/Documents/Study/Grad_research/data/OCSP/Mooring/original_data_2007/MERRA/rain_skin_t';
-dinfo = dir(fullfile(merra_dir,'*.nc'));
-num_files = length(dinfo);
-filenames = fullfile(merra_dir,{dinfo.name});
-
-lat_merra = ncread(filenames{1}, ncvars{1});
-lon_merra = ncread(filenames{1}, ncvars{2});
-
-ts = zeros(length(lat_merra),length(lon_merra),24*num_files)*NaN; % skin temperature
-time_sst = zeros(24*num_files,1)*NaN;
-
-for K = 1:24:(24*num_files-23)
-
-  this_file = filenames{ceil(K/24)};
-  ts(:,:,K:K+23) = ncread(this_file, ncvars{3});
-
-  % get the reference time
-  t_ref = ncreadatt(this_file,'time','units'); % get the attribute 'units' for 'time'
-  t_ref = t_ref(15:end); % truncate to the time string
-  t_ref = datenum(t_ref, 'yyyy-mm-dd HH:MM:SS');
-
-  % date numbers for the timestamp
-  time_sst(K:K+23) = double(ncread(this_file, ncvars{4}))/(60*24) + t_ref;
-
-end
-
-[X_merra, Y_merra, Z_merra] = meshgrid(lon_merra,lat_merra,time_sst);
-
-% interpolate to get the sea surface temperature time series at buoy site
-ts_papa = interp3(X_merra,Y_merra,Z_merra,ts,...
-    (lon-360)*ones(size(bad_sst)),lat*ones(size(bad_sst)),time(bad_sst))-273.15;
-% the unit for surface skin temperature in merra is Kelvin
-
-sst_r = sst;
-sst_r(bad_sst) = ts_papa;
-
-%% rain
-
+bad_sst  = find(sst>10000);
 bad_rain = find(rain>10000);
 
-bad_rain = [bad_rain; (length(time_rain)+1:length(time))'];
-% incoporate the period after the last observation record of rain rate
-
-ncvars =  {'lat', 'lon', 'RAINOCN', 'time'};
-merra_dir = '~/Documents/Study/Grad_research/data/OCSP/Mooring/original_data_2007/MERRA/rain_skin_t';
-dinfo = dir(fullfile(merra_dir,'*.nc'));
-num_files = length(dinfo);
-filenames = fullfile(merra_dir,{dinfo.name});
+ncvars =  {'lat', 'lon', 'TSKINWTR', 'RAINOCN', 'time'};
+dinfo = dir(fullfile(merra_dir,'/rain_skinT/*.nc'));
+nFile = length(dinfo);
+filenames = fullfile({dinfo.folder},{dinfo.name});
 
 lat_merra = ncread(filenames{1}, ncvars{1});
 lon_merra = ncread(filenames{1}, ncvars{2});
 
-rainfall = zeros(length(lat_merra),length(lon_merra),24*num_files)*NaN; % rain rate
-time_rainfall = zeros(24*num_files,1)*NaN;
+ts       = nan(length(lat_merra),length(lon_merra),24,nFile); % skin temp.
+rainfall = nan(length(lat_merra),length(lon_merra),24,nFile); % rain rate
+t_merra = nan(24,nFile);
 
-for K = 1:24:(24*num_files-23)
+for K = 1:nFile
 
-  this_file = filenames{ceil(K/24)};
-  rainfall(:,:,K:K+23) = ncread(this_file, ncvars{3});
+  this_file = filenames{K};
+  ts(:,:,:,K)       = ncread(this_file, ncvars{3});
+  rainfall(:,:,:,K) = ncread(this_file, ncvars{4});
 
   % get the reference time
   t_ref = ncreadatt(this_file,'time','units'); % get the attribute 'units' for 'time'
   t_ref = t_ref(15:end); % truncate to the time string
   t_ref = datenum(t_ref, 'yyyy-mm-dd HH:MM:SS');
 
-  % date numbers for the timestamp
-  time_rainfall(K:K+23) = double(ncread(this_file, ncvars{4}))/(60*24) + t_ref;
+  % timestamp
+  t_merra(:,K) = double(ncread(this_file, ncvars{5}))/60/24 + t_ref;
 
 end
 
-[X_merra, Y_merra, Z_merra] = meshgrid(lon_merra,lat_merra,time_rainfall);
+[X_merra, Y_merra, Z_merra] = meshgrid(lon_merra,lat_merra,t_merra(:));
+ts       = ts(:,:,:);
+rainfall = rainfall(:,:,:);
 
-% interpolate to get the rain rate time series at buoy site
-rainfall_papa = interp3(X_merra,Y_merra,Z_merra,rainfall,...
+% interpolate to get the SST and rain rate at buoy site
+ts_papa   = interp3(X_merra,Y_merra,Z_merra,ts,...
+    (lon-360)*ones(size(bad_sst)),lat*ones(size(bad_sst)),time(bad_sst))-273.15;
+% unit for surface skin temperature in MERRA is Kelvin
+
+rain_papa = interp3(X_merra,Y_merra,Z_merra,rainfall,...
     (lon-360)*ones(size(bad_rain)),lat*ones(size(bad_rain)),time(bad_rain))*3600; % [mm/hr]
-% the unit for rain rate in merra is kg/(m^2*s) ~ mm/s (no salt in rain)
+% unit for rain rate in MERRA is kg/(m^2*s) ~ mm/s (no salt in rain)
 
-rain_r = [rain; ones(length(time_rain)-length(time))];
-rain_r(bad_rain) = rainfall_papa;
+sst_r(bad_sst)   = ts_papa;
+rain_r(bad_rain) = rain_papa;
 
-%% clean
+end
 
-clear t_ref

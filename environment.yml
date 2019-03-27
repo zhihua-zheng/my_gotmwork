@@ -6,8 +6,10 @@ dependencies:
     - python=3.6
     - numpy
     - scipy
+    - pandas
     - jupyter
     - matplotlib
     - netCDF4
     - ncl
     - basemap
+    - seaborn

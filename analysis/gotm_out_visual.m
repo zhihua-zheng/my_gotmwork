@@ -34,6 +34,7 @@ plot(time,-mld,'Color',rgb('pinkish'),'LineWidth',.1)
 saveas(gcf,'./figs/mld_on_tke','fig');
 
 % mld_d = get_mld(out.rho,z);
+% plot(mld);hold on;plot(mld_d)
 
 %% Potential Energy (PE)
 
@@ -68,8 +69,6 @@ line_annotate(plot_info)
 
 u = out.u;
 v = out.v;
-u_stokes = out.u_stokes;
-v_stokes = out.v_stokes;
 
 % find where the mixed layer depth is in variable z
 ml_mask = out.z >= -repmat(mld',length(z),1);  
@@ -232,43 +231,129 @@ saveas(gcf, plot_info.save_path, 'epsc');
 % clean the white lines in the patch
 epsclean([plot_info.save_path,'.eps'],'closeGaps',true) 
 
+%% Observed density and mixed layer depth from mooring
+
+obs_dir = '~/Documents/Study/Grad_research/data/OCSP/Mooring/';
+Fname = fullfile(obs_dir, 'profs.mat');
+
+load(Fname,'PTprof','tprof','time_r','time','z_tsd','depth_t');
+
+[~,inx] = ismember(time_model,time_r); % index of simulation time
+PTprof  = PTprof(:,inx);
+[~,inx] = ismember(time_model,time);
+tprof   = tprof(:,inx);
+
+mld_moor = get_mld(PTprof,z_tsd,2);
+
+%% Observed density and mixed layer depth from GOTM interpolation
+
+temp_obs = out.temp_obs;
+mld_t   = get_mld(temp_obs,z,2); % this one is used
+
 %% Langmuir number & Langmuir Stability Length (Belcher et. al 2012)
 
-% analogue of Obukhov length for convective-Langmuir turbulence as L_b
 u_star   = out.u_taus;
 u_stokes = out.u_stokes;
 v_stokes = out.v_stokes;
 
 La_t = get_La(u_star,u_stokes,v_stokes,1,[],[],[]);
-La_sl = get_La(u_star,u_stokes,v_stokes,2,mld,z,h);
+[La_sl, St_sl] = get_La(u_star,u_stokes,v_stokes,2,mld_t,z,h);
 
-Bs = out.Pb(end-1,:)'; % surface buoyancy flux
 St_surf = sqrt(u_stokes(end,:).^2 + v_stokes(end,:).^2)';
 
-h_over_Lb = (Bs .* mld)./(u_star.^2 .* St_surf); % H_ml/L_b
+% -------- Langmuir number histogram --------------------------------------
 
-% dominant cases
-% p_d = 0.9;
-% x_L = linspace(1,10,50);
-% y_L = 1/p_d - 1 - x_L; % Langmuir turbulence dominace
-% 
-% x_C = linspace(0.1,10,50);
-% y_C = (1 + x_C)*p_d*10; % Convective turbulence dominace
-% 
-% x_S = linspace(0.1,0.3,50);
-% y_S = x_S/(p_d*10) - 1; % Shear turbulence dominace
+figure('position', [0, 0, 600, 420])
+h1 = histogram(La_sl,'Normalization','pdf');
+hold on
+h2 = histogram(La_t,'Normalization','pdf');
 
-%% Plot diagram for turbulence regimes 
-figure('position', [0, 0, 500, 460])
+h1.BinEdges      = (0:0.03:1.5);
+h1.FaceColor     = 'r';
+h1.EdgeColor     = 'r';
+h1.FaceAlpha     = 0.5;
+h2.BinEdges      = (0:0.03:1.5);
+h2.FaceColor     = 'b';
+h2.EdgeColor     = 'b';
+h2.FaceAlpha     = 0.5;
 
-% line(x_L,y_L,'Color','k','LineWidth',2)
-% line(x_C,y_C,'Color','k','LineWidth',2)
-% line(x_S,y_S,'Color','k','LineWidth',2)
-scatter(La_t(h_over_Lb>0),h_over_Lb(h_over_Lb>0),20,'filled')
+setDateAxes(gca,'fontsize',11,...
+      'fontname','computer modern','TickLabelInterpreter','latex')
+legend([h1 h2],{'$$La_{SL}$$','$$La_{t}$$'},'location','east','fontname',...
+      'computer modern', 'fontsize', 16,'Interpreter', 'latex')
+  
+% -------- Langmuir number histogram --------------------------------------
 
-set(gca,'Yscale','log')
-set(gca,'Xscale','log')
-% ylim([1e-3 1e3])
-xlim([1e-1 1])
-box on
-grid on
+Fname = fullfile(obs_dir, 'MF.mat');
+load(Fname,'hbb','time_r');
+
+ssd_obs   = rho_obs(end,:);
+cp_obs    = gsw_cp_t_exact(salt_obs(end,:),temp_obs(end,:),-z(end));
+alpha_obs = gsw_alpha(salt_obs(end,:),temp_obs(end,:),-z(end));
+
+% surface buoyancy flux
+% Bs = out.Pb(end-1,:)';
+hbb   = interp1(time_r,hbb,time_model); % positive into ocean [W/m^2]
+w_b_0 = - (hbb .* alpha_obs*g) ./ (cp_obs .* ssd_obs); % positive for convection [m^2/s^3]
+Bf    = - w_b_0; % buoyancy forcing
+
+kappa = 0.4;
+L_o   = (u_star.^3) ./ (kappa .* Bf); % Obukhov length scale
+
+% analogue of Obukhov length for convective-Langmuir turbulence as L
+L_sl = (u_star.^2 .* St_sl) ./ w_b_0;
+
+h_over_L_surf = (w_b_0 .* mld_t)./(u_star.^2 .* St_surf); % H_ml/L
+h_over_L_sl   = mld_t ./ L_sl; % H_ml/L
+
+% -------- H_ml/L histogram -----------------------------------------------
+
+figure('position', [0, 0, 600, 420])
+h1 = histogram(log10(h_over_L_sl(h_over_L_sl >= 0)),'Orientation','horizontal');
+hold on
+h2 = histogram(log10(h_over_L_surf(h_over_L_surf >= 0)),'Orientation','horizontal');
+
+h1.Normalization = 'pdf';
+h1.BinWidth      = 0.2;
+h1.FaceColor     = 'r';
+h1.EdgeColor     = 'r';
+h1.FaceAlpha     = 0.5;
+h2.Normalization = 'pdf';
+h2.BinWidth      = 0.2;
+h2.FaceColor     = 'b';
+h2.EdgeColor     = 'b';
+h2.FaceAlpha     = 0.5;
+
+setDateAxes(gca,'fontsize',11,...
+      'fontname','computer modern','TickLabelInterpreter','latex')
+legend([h1 h2],{'$$log_{10}\Big( \frac{B_{s}H_{ml}}{u_{*}^{2}u^{S}_{SL}} \Big)$$',...
+    '$$log_{10}\Big( \frac{B_{s}H_{ml}}{u_{*}^{2}u^{S}} \Big)$$'},...
+    'location','best','orientation','horizontal',...
+    'fontname','computer modern', 'fontsize', 16,'Interpreter','latex')
+
+% -------- H_ml/L histogram -----------------------------------------------
+
+%% Diagram for turbulence regimes 
+
+plot_wwb(La_sl,h_over_L_sl,La_t,h_over_L_surf,1);
+
+%% Monin-Obukhov similarity function
+
+% use positive z to calculate zeta, the stability parameter
+
+temp_z_obs     = center_diff(temp_obs,z,1);
+z_gradient     = zi(2:end-1);
+[~,Z_gradient] = meshgrid(time_model,z_gradient);
+
+sld      = mld_t/5;
+where_sl = Z_gradient >= repmat(-sld',length(z_gradient),1);
+
+tmp   = repmat(L_o',length(z_gradient),1);
+zeta  = - Z_gradient(where_sl) ./ (tmp(where_sl));
+
+% turbulent heat flux, [C*m/s], positive for destabelizing 
+w_theta_0 = - out.heat ./ (ssd_obs .* cp_obs);
+t_star    = - w_theta_0 ./ u_star; % dynamic temperature
+
+phi_T = get_phi_obs(temp_z_obs,z_gradient,t_star,L_o,where_sl);
+

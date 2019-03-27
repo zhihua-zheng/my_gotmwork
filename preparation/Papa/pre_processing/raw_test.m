@@ -25,11 +25,10 @@ scatter(time(w_gust<100),w_gust(w_gust<100),.9,'MarkerEdgeColor',rand(1,3),...
 line(time,w_gust_nan,'LineWidth',6,'Color',[.9 .1 .2])
 box on
 datetick('x','yyyy')
-ylabel('zonal wind speed ($$m/s$$)', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-xlabel('time', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-setDateAxes(gca,'XLim',[datenum('June 08, 2007') datenum('April 21, 2018')],...
-'YLim',[y_bot y_up],...
-'fontsize',11,'fontname','computer modern','TickLabelInterpreter', 'latex')
+ylabel('wind gustiness ($$m/s$$)', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+xlabel('time', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+setDateAxes(gca,'XLim',time([1,end]),'YLim',[y_bot y_up],...
+'fontsize',15,'fontname','computer modern','TickLabelInterpreter', 'latex')
 
 %export_fig ('./test/w_gust_sereis','-pdf','-transparent','-painters')
 
@@ -53,11 +52,10 @@ scatter(time(w_u<100),w_u(w_u<100),.9,'MarkerEdgeColor',rand(1,3),...
 line(time,w_u_nan,'LineWidth',6,'Color',[.9 .1 .2])
 box on
 datetick('x','yyyy')
-ylabel('zonal wind speed ($$m/s$$)', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-xlabel('time', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-setDateAxes(gca,'XLim',[datenum('June 08, 2007') datenum('April 21, 2018')],...
-'YLim',[y_bot y_up],...
-'fontsize',11,'fontname','computer modern','TickLabelInterpreter', 'latex')
+ylabel('u wind ($$m/s$$)', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+xlabel('time', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+setDateAxes(gca,'XLim',time([1,end]),'YLim',[y_bot y_up],...
+'fontsize',15,'fontname','computer modern','TickLabelInterpreter', 'latex')
 
 %export_fig ('./test/w_u_sereis','-pdf','-transparent','-painters')
 
@@ -81,39 +79,37 @@ scatter(time(w_v<100),w_v(w_v<100),.9,'MarkerEdgeColor',rand(1,3),...
 line(time,w_v_nan,'LineWidth',6,'Color',[.9 .1 .2])
 box on
 datetick('x','yyyy')
-ylabel('meridional wind speed ($$m/s$$)', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-xlabel('time', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-setDateAxes(gca,'XLim',[datenum('June 08, 2007') datenum('April 21, 2018')],...
-'YLim',[y_bot y_up],...
-'fontsize',11,'fontname','computer modern','TickLabelInterpreter', 'latex')
+ylabel('v wind ($$m/s$$)', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+xlabel('time', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+setDateAxes(gca,'XLim',time([1,end]),'YLim',[y_bot y_up],...
+'fontsize',15,'fontname','computer modern','TickLabelInterpreter', 'latex')
 
 %export_fig ('./test/w_v_sereis','-pdf','-transparent','-painters')
 
 %% air temperature
  
-bad_t_air = find(t_air>100);
+bad_t_air = find(Ta>100);
 
-v_max = max(t_air(t_air<100));
-v_min = min(t_air(t_air<100));
+v_max = max(Ta(Ta<100));
+v_min = min(Ta(Ta<100));
 y_up = v_max + 0.1*(v_max-v_min);
 y_bot = v_min - 0.1*(v_max-v_min);
 
-t_air_nan = ones(size(t_air))*NaN;
+t_air_nan = ones(size(Ta))*NaN;
 t_air_nan(bad_t_air) = v_max + 0.05*(v_max-v_min);
 
 
 figure('position', [0, 0, 1000, 200])
 
-scatter(time(t_air<100),t_air(t_air<100),.9,'MarkerEdgeColor',rand(1,3),...
+scatter(time(Ta<100),Ta(Ta<100),.9,'MarkerEdgeColor',rand(1,3),...
               'MarkerFaceColor',rand(1,3),'LineWidth',1)
 line(time,t_air_nan,'LineWidth',6,'Color',[.9 .1 .2])
 box on
 datetick('x','yyyy')
-ylabel('air temperature ($$^{o}C$$)', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-xlabel('time', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-setDateAxes(gca,'XLim',[datenum('June 08, 2007') datenum('April 21, 2018')],...
-'YLim',[y_bot y_up],...
-'fontsize',11,'fontname','computer modern','TickLabelInterpreter', 'latex')
+ylabel('air temp. ($$^{o}C$$)', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+xlabel('time', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+setDateAxes(gca,'XLim',time([1,end]),'YLim',[y_bot y_up],...
+'fontsize',15,'fontname','computer modern','TickLabelInterpreter', 'latex')
 
 %export_fig ('./test/tair_sereis','-pdf','-transparent','-painters')
 
@@ -138,11 +134,10 @@ scatter(time(rh<1000),rh(rh<1000),.9,'MarkerEdgeColor',rand(1,3),...
 line(time,rh_nan,'LineWidth',6,'Color',[.9 .1 .2])
 box on
 datetick('x','yyyy')
-ylabel('relative humidity ($$\%$$)', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-xlabel('time', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-setDateAxes(gca,'XLim',[datenum('June 08, 2007') datenum('April 21, 2018')],...
-'YLim',[y_bot y_up],...
-'fontsize',11,'fontname','computer modern','TickLabelInterpreter', 'latex')
+ylabel('relative humidity ($$\%$$)', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+xlabel('time', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+setDateAxes(gca,'XLim',time([1,end]),'YLim',[y_bot y_up],...
+'fontsize',15,'fontname','computer modern','TickLabelInterpreter', 'latex')
 
 %export_fig ('./test/rh_sereis','-pdf','-transparent','-painters')
 
@@ -170,11 +165,10 @@ line(time,sst_nan,'LineWidth',6,'Color',[.9 .1 .2])
 %               'MarkerFaceColor',rand(1,3),'LineWidth',1)
 box on
 datetick('x','yyyy')
-ylabel('SST ($$^{o}C$$)', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-xlabel('time', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-setDateAxes(gca,'XLim',[datenum('June 08, 2007') datenum('April 21, 2018')],...
-'YLim',[y_bot y_up],...
-'fontsize',11,'fontname','computer modern','TickLabelInterpreter', 'latex')
+ylabel('SST ($$^{o}C$$)', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+xlabel('time', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+setDateAxes(gca,'XLim',time([1,end]),'YLim',[y_bot y_up],...
+'fontsize',15,'fontname','computer modern','TickLabelInterpreter', 'latex')
 
 
 %export_fig ('./test/sst_sereis','-pdf','-transparent','-painters')
@@ -199,11 +193,10 @@ scatter(time(Rs<1000),Rs(Rs<1000),.9,'MarkerEdgeColor',rand(1,3),...
 line(time,Rs_nan,'LineWidth',6,'Color',[.9 .1 .2])
 box on
 datetick('x','yyyy')
-ylabel('downgoing shortwave radiation ($$W/m^2$$)', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-xlabel('time', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-setDateAxes(gca,'XLim',[datenum('June 08, 2007') datenum('April 21, 2018')],...
-'YLim',[y_bot y_up],...
-'fontsize',11,'fontname','computer modern','TickLabelInterpreter', 'latex')
+ylabel('downgoing SW ($$W/m^2$$)', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+xlabel('time', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+setDateAxes(gca,'XLim',time([1,end]),'YLim',[y_bot y_up],...
+'fontsize',15,'fontname','computer modern','TickLabelInterpreter', 'latex')
 
 %export_fig ('./test/Rs_sereis','-pdf','-transparent','-painters')
 
@@ -227,11 +220,10 @@ scatter(time(Rl<1000),Rl(Rl<1000),.9,'MarkerEdgeColor',rand(1,3),...
 line(time,Rl_nan,'LineWidth',6,'Color',[.9 .1 .2])
 box on
 datetick('x','yyyy')
-ylabel('downgoing longwave radiation ($$W/m^2$$)', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-xlabel('time', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-setDateAxes(gca,'XLim',[datenum('June 08, 2007') datenum('April 21, 2018')],...
-'YLim',[y_bot y_up],...
-'fontsize',11,'fontname','computer modern','TickLabelInterpreter', 'latex')
+ylabel('downgoing LW ($$W/m^2$$)', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+xlabel('time', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+setDateAxes(gca,'XLim',time([1,end]),'YLim',[y_bot y_up],...
+'fontsize',15,'fontname','computer modern','TickLabelInterpreter', 'latex')
 
 %export_fig ('./test/Rl_sereis','-pdf','-transparent','-painters')
 
@@ -263,11 +255,10 @@ line(time,P_nan,'LineWidth',7,'Color',[.9 .1 .2])
 %               'MarkerFaceColor',rand(1,3),'LineWidth',1)
 box on
 datetick('x','yyyy')
-ylabel('barometric pressure ($$hPa$$)', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-xlabel('time', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-setDateAxes(gca,'XLim',[datenum('June 08, 2007') datenum('April 21, 2018')],...
-'YLim',[y_bot y_up],...
-'fontsize',11,'fontname','computer modern','TickLabelInterpreter', 'latex')
+ylabel('air pressure ($$hPa$$)', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+xlabel('time', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+setDateAxes(gca,'XLim',time([1,end]),'YLim',[y_bot y_up],...
+'fontsize',15,'fontname','computer modern','TickLabelInterpreter', 'latex')
 
 %export_fig ('./test/p_sereis','-pdf','-transparent','-painters')
 
@@ -287,16 +278,15 @@ rain_nan(bad_rain) = v_max + 0.05*(v_max-v_min);
 
 figure('position', [0, 0, 1000, 200])
 
-scatter(time_rain(rain<100),rain(rain<100),.9,'MarkerEdgeColor',rand(1,3),...
+scatter(time(rain<100),rain(rain<100),.9,'MarkerEdgeColor',rand(1,3),...
               'MarkerFaceColor',rand(1,3),'LineWidth',1)
-line(time_rain,rain_nan,'LineWidth',6,'Color',[.9 .1 .2])
+line(time,rain_nan,'LineWidth',6,'Color',[.9 .1 .2])
 box on
 datetick('x','yyyy')
-ylabel('precipitation rate ($$mm/hr$$)', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-xlabel('time', 'fontname', 'computer modern', 'fontsize', 14,'Interpreter', 'latex')
-setDateAxes(gca,'XLim',[datenum('June 08, 2007') datenum('June 15, 2017')],...
-'YLim',[y_bot y_up],...
-'fontsize',11,'fontname','computer modern','TickLabelInterpreter', 'latex')
+ylabel('rain rate ($$mm/hr$$)', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+xlabel('time', 'fontname', 'computer modern', 'fontsize', 20,'Interpreter', 'latex')
+setDateAxes(gca,'XLim',time([1,end]),'YLim',[y_bot y_up],...
+'fontsize',15,'fontname','computer modern','TickLabelInterpreter', 'latex')
 
 %export_fig ('./test/rain_sereis','-pdf','-transparent','-painters')
 

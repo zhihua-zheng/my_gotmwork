@@ -1,10 +1,10 @@
-function A_filled = vert_fill(A,z)
+function A_filled = vert_fill(A,z,t)
 %
 % vert_fill
 %==========================================================================
 %
 % USAGE:
-%  vert_fill(A,z)
+%  A_filled = vert_fill(A,z,t)
 %
 % DESCRIPTION:
 %  Function to vertically fill the missing data, using linear interpolation
@@ -12,8 +12,9 @@ function A_filled = vert_fill(A,z)
 %
 % INPUT:
 %  
-%  A - 2-D matrix with NaNs in columns
-%  z - 1-D vector for the row coordinates of A 
+%  A - 2-D matrix, Quantity to be interpolated
+%  z - 1-D vector, row coordinates of A [-, m]
+%  t - 1-D vector, column coordinates of A [+]
 %
 % OUTPUT:
 %
@@ -21,8 +22,19 @@ function A_filled = vert_fill(A,z)
 %
 % AUTHOR:
 %  March 12 2019. Zhihua Zheng                       [ zhihua@uw.edu ]
+%==========================================================================
+
+%% horizontal fill the surface and bottom
+
+A_surf   = A(1,:);
+A_bottom = A(end,:);
+
+A(1,:)   = interp1(t(~isnan(A_surf)),A_surf(~isnan(A_surf)),t);
+A(end,:) = interp1(t(~isnan(A_bottom)),A_bottom(~isnan(A_bottom)),t);
 
 A_filled = A;
+
+%% vertically fill the columns
 
 [~, cols] = find(isnan(A));
 col_nan = unique(cols);

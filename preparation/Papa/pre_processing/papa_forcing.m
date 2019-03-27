@@ -2,9 +2,9 @@
 %
 % make forcing files for new GOTM OCSPapa test case
 %
-% Zhihua Zheng, UW-APL, updated on Jun. 15 2018
+% Zhihua Zheng, UW-APL, updated on Mar. 25 2019
 % 
-% load meteological observation data from PMEL OWS P station mooring
+% load meteological observation data from PMEL OCSP station mooring
 % -------------------------------------------------------------------------
 % %        w_u - x component wind velocity (m/s)
 % %        w_v - y component wind velocity (m/s)
@@ -12,8 +12,8 @@
 % %      w_dir - wind direction (clockwise to the North), 
 % %              in oceanographic sense (degree)
 % %     z_wind - wind velocity measurement height (m)
-% %      t_air - air temperature (degree centigrade)
-% %       z_ta - air temperature measurement height (m)
+% %         Ta - air temperature (degree centigrade)
+% %       z_Ta - air temperature measurement height (m)
 % %         rh - relative humidity (%)
 % %       z_rh - relative humidity measurement height (m)
 % %         Rs - downward shortwave radiation (W/m^2)
@@ -25,27 +25,17 @@
 % %        ssd - sea surface potential density anomaly (sigma-theta, kg/m^3)
 % %      sprof - salinity profile (PSU)
 % %      tprof - temperature profile (degree centigrade)
-% %    rhoprof - potential density anomaly profile (kg/m^3)
+% %      dprof - potential density anomaly profile (kg/m^3)
 % %    depth_t - depth for T profile (m)
-% %    depth_s - depth for S profile (m), same as depth_rho
-% %    cur_spd - total current speed (cm/s)
-% %      cur_u - x component current velocity profile (cm/s)
-% %      cur_v - y component current velocity profile (cm/s)
-% %    cur_dir - current direction (clockwise to the North), (degree)
+% %   depth_sd - depth for S profile (m), same as depth_p
+% %      uprof - x component current velocity profile (cm/s)
+% %      vprof - y component current velocity profile (cm/s)
 % %  depth_cur - depth for current profile (m)
 % %        lat - mooring latitude (degree)
 % %        lon - mooring longitude (degree)
-% %       time - datenumbers for measurements (UTC)
-% %       date - date strings for measurements (UTC)
-% %   time_cur - datenumbers for current profile measurements (UTC)
-% %   date_cur - date strings for current profile measurements (UTC)
-% %  time_rain - datenumbers for precipitation measurements (UTC)
-% %  date_rain - date strings for precipitation measurements (UTC)
-% %     dn2007 - datenumber for start time of time series
-%   dn2007_cur - datenumber for start time of current profile time series
-%  dn2007_rain - datenumber for start time of precipitation time series
+% %       time - datenumbers for Met. measurements (UTC)
 
-% load wave data from OWS P station CDIP buoy
+% load wave data from OCSP station CDIP buoy
 % -------------------------------------------------------------------------
 % %   wave_bw - frequency bandwidth (hertz)
 % % wave_freq - band center frequency (hertz)
@@ -61,34 +51,30 @@ clear
 data_dir = '~/Documents/Study/Grad_research/data/OCSP/';
 
 % load the whole workspace as a struct
-met_data = load([data_dir,'Mooring/forcing_IC_2007.mat']); 
+met_data = load([data_dir,'Mooring/Met_IC_ocsp.mat']); 
 
-load([data_dir,'Mooring/forcing_IC_2007.mat'])
+load([data_dir,'Mooring/Met_IC_ocsp.mat'])
 load([data_dir,'CDIP_Wave/wave_2010.mat'])
 
-% set the negative values of rain data to zeros
-rain(rain<0) = 0;
+% set the negative values of rain data to outlier
+rain(rain<0) = 1e35;
 
-%% pick out good data
+%% initial look
 
 raw_test; % initial examination of data quality
 
 %% organize data 
 
 % After preliminary analysis, noticed that most data is ruined for a
-% long period between Nov. 2008 and Jun. 2009. We decided to truncate the 
-% data and pick out the data after Jun. 2009
+% long period before sometime in 2009. We decided to pcik a good starting 
+% time in 2009 and only pick out the data after that
 
-% Wanted to include rain data in the computation of flux, but the
-% precipitation measurement is intermittent, hence rain data is ignored,
-% and the sensible heat flux due to rain (small) is not included.
+inx2009 = find(time == datenum(2009,1,1,0,0,0));
+inx2010 = find(time == datenum(2010,1,1,0,0,0));
 
-inx2009 = find(date=='2009/01/01 00:00:00');
-inx2010 = find(date=='2010/01/01 00:00:00');
-
-% loop through variables to find the latest good data beginning time 
-% (pre_day)
-vars = {'w_u','w_v','sst','P','t_air','rh','Rs','Rl','w_dir','rain',...
+% loop through variables to find the latest date (pre_day), after whihc all
+% the data have good quality 
+vars = {'w_u','w_v','sst','P','Ta','rh','Rs','Rl','w_dir','rain',...
     'sprof','tprof'};
 
 for i = 1:length(vars)
@@ -101,7 +87,7 @@ for i = 1:length(vars)
         var_test = met_data.(vars{i})(1,inx2009+1:inx2010);
     end
 
-    % preferred starting time index
+    % preferred truncating time index (after last bad flag)
     if i < 2
         
         pre_day = find(var_test>10000,1,'last') + inx2009 + 1; 
@@ -116,89 +102,95 @@ end
 
 clear tmp inx2009 inx2010
 
-% Abandon all the data before pre_day, and linearly interpolate the small
-% gaps
+% Abandon the data before pre_day, and linearly interpolate the small gaps
 
 % Note that barometric pressure, rain rate and sea surface temperature have 
 % relative long periods of missing data, hence the large gaps in P and sst 
-% time series are filled by interpolating the reanalysis data from MERRA2 
-% in space and time to the ows_papa mooring location and data time.
+% time series are filled by interpolating the reanalysis data MERRA2 in 
+% space and time to the OCSP mooring location and time.
 
-merra_fill; % subroutine to fill the other large gaps
+% function to fill other large gaps
+[P_r,sst_r,rain_r] = merra_fill(P,sst,rain,lat,lon,time); 
 
-% truncation (and interpolation)
-sst_r = sst_r(pre_day:end);
-P_r = P_r(pre_day:end);
+% truncation for COARE inputs
+sst_r  = sst_r(pre_day:end);
+P_r    = P_r(pre_day:end);
 rain_r = rain_r(pre_day:end);
 
-% w_spd_r = interp1(time(w_spd<100),w_spd(w_spd<100),time(pre_day:end));
-% extra large gap at the end, compared to w_u and w_v data...
+time_r = time(pre_day:end);
 
-w_u_r = interp1(time(w_u<100),w_u(w_u<100),time(pre_day:end));
-w_v_r = interp1(time(w_v<100),w_v(w_v<100),time(pre_day:end));
+% truncation and linear interpolation for COARE inputs
+w_u_r  = interp1(time(w_u<100),w_u(w_u<100),time_r);
+w_v_r  = interp1(time(w_v<100),w_v(w_v<100),time_r);
+Ta_r   = interp1(time(Ta<50),Ta(Ta<50),time_r);
+rh_r   = interp1(time(rh<150),rh(rh<150),time_r);
+Rs_r   = interp1(time(Rs<1000),Rs(Rs<1000),time_r);
+Rl_r   = interp1(time(Rl<1000),Rl(Rl<1000),time_r);
+
 w_spd_r = sqrt(w_u_r.^2 + w_v_r.^2);
-sss_r = interp1(time(sss<100),sss(sss<100),time(pre_day:end));
-t_air_r = interp1(time(t_air<50),t_air(t_air<50),time(pre_day:end));
-rh_r = interp1(time(rh<150),rh(rh<150),time(pre_day:end));
-Rs_r = interp1(time(Rs<1000),Rs(Rs<1000),time(pre_day:end));
-Rl_r = interp1(time(Rl<1000),Rl(Rl<1000),time(pre_day:end));
-w_dir_r = interp1(time(w_dir<=360),w_dir(w_dir<=360),time(pre_day:end));
-time_r = time(pre_day:end); % truncated datenumbers for measurements (UTC)
-date_r = date(pre_day:end); % truncated strings for measurements (UTC)
 
+% truncation and linear interpolation for other variables
+sss(sss>100) = NaN;
+ssd(ssd>100) = NaN;
+sss_r = interp1(time(~isnan(sss)),sss(~isnan(sss)),time_r);
+ssd_r = interp1(time(~isnan(ssd)),ssd(~isnan(ssd)),time_r);
 
-% TS profile data truncation and interpolation
-sprof(sprof>1000) = NaN;
-tprof(tprof>1000) = NaN;
+% T-S-D profile truncation and interpolation
+tprof(tprof>100) = NaN;
+sprof(sprof>100) = NaN;
+dprof(dprof>100) = NaN; % density anomaly
 
-sprof_tr = sprof(:,pre_day:end);
-tprof_tr = tprof(:,pre_day:end);
+tprof_r = tprof(:,pre_day:end);
+sprof_r = sprof(:,pre_day:end);
+dprof_r = dprof(:,pre_day:end);
+
+tprof_r = vert_fill(tprof_r,-depth_t, time_r);
+sprof_r = vert_fill(sprof_r,-depth_sd,time_r);
+dprof_r = vert_fill(dprof_r,-depth_sd,time_r);
 
 % Absolute salinity and potential temperature conversion (TEOS-10)
+% GSW toolbox uses pressure, hence positive depth
 
-[T_s, Z_s] = meshgrid(time_r,depth_s);
-F = scatteredInterpolant(T_s(~isnan(sprof_tr)),Z_s(~isnan(sprof_tr)),...
-    sprof_tr(~isnan(sprof_tr)),'linear'); % interpolation object
-sprof_tr_i = F(T_s,Z_s);
+SAprof = gsw_SA_from_SP(sprof_r,depth_sd,lon,lat); % absolute salinity
 
-sprof_r = gsw_SA_from_SP(sprof_tr_i,Z_s,lon,lat);
-% henceforth absolute salinity
+% Project tprof to depth_sd
+tprof_sd = nan(size(SAprof));
+for j = 1:length(time_r)
+    
+    tprof_sd(:,j) = interp1(-depth_t,tprof_r(:,j),-depth_sd);
+end
 
+PTprof = gsw_pt0_from_t(SAprof,tprof_sd,depth_sd); % potential temperature
 
-[T_t, Z_t] = meshgrid(time_r,depth_t);
+z_tsd = -depth_sd;
 
-% temperature at S-profile depth level
-F = scatteredInterpolant(T_t(~isnan(tprof_tr)),Z_t(~isnan(tprof_tr)),...
-    tprof_tr(~isnan(tprof_tr)),'linear'); 
-tprof_depth_s = F(T_s,Z_s);
+% save T-S-D profiles
+save('~/Documents/Study/Grad_research/data/OCSP/Mooring/profs.mat',...
+    'tprof','tprof_r','PTprof','sprof','SAprof','dprof','dprof_r',...
+    'depth_t','z_tsd','time','time_r')
 
-tprof_r = gsw_pt0_from_t(sprof_r,tprof_depth_s,Z_s); 
-% henceforth potential temperature
+clear depth_sd depth_t
 
-%----- velocity data is extremely bad
-% [T, Z] = meshgrid(time_prof_r,depth_cur);
-% cur_u_r = griddata(T(cur_u<100),Z(cur_u<100),cur_u(cur_u<100),T,Z,'linear');
+%% Time Conversion
 
+% USE UTC TIME!!
+date_r = string(datestr(time_r, 'yyyy-mm-dd HH:MM:SS'));
 
 %% compute surface flux
 
-% momentum flux = - surface wind stress
-%
-% net heatflux (positive in) = - latent heat flux (positive out) - sensible 
-% heat flux (positive out) + net longwave radiation (positive in)
+% net heatflux (positive in) = latent heat flux (positive in) + sensible 
+% heat flux (positive in) + net longwave radiation (positive in)
 
-
-% use wind-speed dependent formulation, without wave information
-A = coare35vn(w_spd_r,z_wind,t_air_r,z_ta,rh_r,z_rh,P_r,sst_r,Rs_r,...
+% call COARE (3.5) bulk formula
+A = coare35vn(w_spd_r,z_wind,Ta_r,z_Ta,rh_r,z_rh,P_r,sst_r,Rs_r,...
     Rl_r,lat,NaN,rain_r,NaN,NaN);
 % note we should use relative velocity when I have time to do that, but
 % does it matter? I don't have good surface current measurement record.
 
-tau = A(:,2);
-hsb = A(:,3); % sensible heat flux
-hlb = A(:,4); % latent heat flux
-hbb = A(:,5); % surface buoyancy flux (positive out)
-u10 = A(:,29); % wind speed adjusted to 10 m
+tau = A(:,2); % wind stress [N/m^2]
+hsb = A(:,3); % sensible heat     flux into the ocean [W/m^2]
+hlb = A(:,4); % latent   heat     flux into the ocean [W/m^2]
+hbb = A(:,5); % surface  buoyancy flux into the ocean [W/m^2]
 
 w_cos = w_u_r./w_spd_r;
 w_sin = w_v_r./w_spd_r;
@@ -207,37 +199,24 @@ w_sin = w_v_r./w_spd_r;
 tau_x = tau.*w_cos;
 tau_y = tau.*w_sin;
 
-% u10 in x, y direction
-u10_x = u10.*w_cos;
-u10_y = u10.*w_sin;
-
-%------ get the date vector and decimal yearday, adjusted for leap year
-
 date_vec = datevec(char(date_r)); 
-% lp = leapyear(date_vec(:,1));  % leap year index
-% date_vec = [date_vec lp];
-% yd = yearday(date_vec(:,2),date_vec(:,3),date_vec(:,7)); 
-% yearday - vectorization issue with function yearday
-% date_vec = [date_vec yd];
-
 yd = date2doy(time_r)-1; % yearday (starts at 1) from 'date2doy'
 %-----------------------
 
-% compute net short wave heat flux
-nsw = swhf(yd,date_vec(:,1),(360-lon)*ones(size(time_r)),...
-    lat*ones(size(time_r)),Rs_r);
-%---- Need to change the longitude into format of West positive degree
-%---- Note the operating time in the subroutine of swhf, soradna1 (no-sky
-% solar radiation) is in UTC format.
+% compute net short wave heat flux, longitude: West positive degree
+nsw = swhf(yd,date_vec(:,1),(360-lon)*ones(time_r),...
+    lat*ones(time_r),Rs_r);
 
-% compute net long wave heat flux
+% compute net longwave heat flux into the ocean
 nlw = lwhf(sst_r,Rl_r,Rs_r);
 
-% compute net surfac heat flux (shortwave heat flux and advective heat
-% flux are omitted)
-hf = -hlb - hsb + nlw;
+% compute net surfac heat flux into the ocean
+hf = hlb + hsb + nlw;
 
-save('~/Documents/Study/Grad_research/data/OCSP/Mooring/hbb.mat','hbb','time_r')
+% save Meteological variables
+save('~/Documents/Study/Grad_research/data/OCSP/Mooring/MF.mat',...
+    'tau_x','tau_y','nsw','hf','hbb',...
+    'sst_r','sss_r','ssd_r','rain_r','time_r')
 
 %% Compute Wave Spectrum (frequency bin width weighted)
 
@@ -248,34 +227,9 @@ ycmp = sin(wave_mdir*pi/180);
 % wave spectrum
 spec_h2 = wave_spec.*repmat(wave_bw,1,length(wave_time));
 
-%% Time Conversion
-
-% USE UTC TIME!!
-date_r = string(datestr(time_r, 'yyyy-mm-dd HH:MM:SS'));
-
-% % correction for time zone shift
-% UTC_time = datetime(time_r,'ConvertFrom','datenum','TimeZone','UTC');
-% Papa_time = datetime(UTC_time,'TimeZone','-10:00');
-% 
-% % date number, date string and date vector for papa station local time
-% time_r = datenum(Papa_time);
-% date_r = datestr(Papa_time,'yyyy/mm/dd HH:MM:SS'); % leave it as 'character'
-% date_vec = datevec(date_r); 
-% 
-% % do it again for time_prof_r
-% UTC_time = datetime(time_prof_r,'ConvertFrom','datenum','TimeZone','UTC');
-% Papa_time = datetime(UTC_time,'TimeZone','-10:00');
-% time_prof_r = datenum(Papa_time);
-% date_prof_r = string(datestr(Papa_time,'yyyy/mm/dd HH:MM:SS'));
-
-% Hereafter all the truncated time related variables are in local time zone.
-
-% An updated workspace 'gotm_input_p2007.mat' is hence saved.
-% save('gotm_input_p2007.mat');
-
 %% Diurnal SWR check
 
-diurnal = ones(3000,24)*NaN; % rearrange for every hour (0-23)
+diurnal = nan(3000,24); % rearrange for every hour (0-23)
 
 for i = 1:24
     
@@ -291,7 +245,7 @@ plot(one_day)
 
 %% save
 
-basecase = '../../data/OCSPapa_20100616-20171005/';
+basecase = '../../data/OCSPapa_20070608-20190325/';
 
 %% momentum flux file
 
@@ -309,15 +263,15 @@ fclose(fileID);
 
 %% U10 file
 
-fileID = fopen([basecase,'u10_file.dat'],'w');
-H = [cellstr(date_r) num2cell(u10_x) num2cell(u10_y)];
-formatSpec = '%s  % 8.6e % 8.6e\n';
-
-for i = 1:size(H,1)
-    fprintf(fileID,formatSpec,H{i,:});
-end
-
-fclose(fileID);
+% fileID = fopen([basecase,'u10_file.dat'],'w');
+% H = [cellstr(date_r) num2cell(u10_x) num2cell(u10_y)];
+% formatSpec = '%s  % 8.6e % 8.6e\n';
+% 
+% for i = 1:size(H,1)
+%     fprintf(fileID,formatSpec,H{i,:});
+% end
+% 
+% fclose(fileID);
 
 %% heat flux file
 
@@ -386,7 +340,7 @@ fileID = fopen([basecase,'sprof_file.dat'],'w');
 for i = 1:size(time_r,1)
     
     fprintf(fileID,'%s  18  2\n',date_r(i));
-    fprintf(fileID,'%6.1f   %9.6f\n',[-depth_s'; sprof_r(:,i)']);
+    fprintf(fileID,'%6.1f   %9.6f\n',[z_tsd'; SAprof(:,i)']);
 end
 
 fclose(fileID);
@@ -398,7 +352,7 @@ fileID = fopen([basecase,'tprof_file.dat'],'w');
 for i = 1:size(time_r,1)
     
     fprintf(fileID,'%s  18  2\n',date_r(i));
-    fprintf(fileID,'%6.1f   %9.6f\n',[-depth_s'; tprof_r(:,i)']);
+    fprintf(fileID,'%6.1f   %9.6f\n',[z_tsd'; PTprof(:,i)']);
 end
 
 fclose(fileID);
