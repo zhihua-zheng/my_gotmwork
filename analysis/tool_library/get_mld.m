@@ -4,16 +4,17 @@ function mld = get_mld(A, z, flag)
 %==========================================================================
 %
 % USAGE:
-%  mld = get_mld(rho, z, flag)
+%  mld = get_mld(A, z, flag)
 %
 %
 % DESCRIPTION:
-%  Compute the mixed layer depth from the density profile
+%  Compute the mixed layer depth from the density/temperature profile
 %
 % INPUT:
 %
 %  A - 2-D matrix (z,t) containing density/temperature profiles
-%  z - 1-D vector with vertical coordinates for density profile [-, m]
+%  z - 1-D column vector with vertical coordinates for density/temperature 
+%      profile, in ascending order [-, m]
 %  flag - 1 or 2 to indicate using density criteria or temperature criteria
 % 
 % OUTPUT:
