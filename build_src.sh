@@ -27,7 +27,7 @@ exedir="${GOTMEXE_ROOT}"
 cvmixdir="${CVMIX_ROOT}"
 
 # flags to build GOTM with CVMix
-l_cvmix=true
+l_cvmix=false
 
 # flags to build and clean build
 l_build=false
@@ -70,6 +70,13 @@ if [[ "${l_build}" == "true" ]]; then
     mkdir -p ${exedir}
 
     # build
+    export CC=icc
+    export CXX=icpc
+    export FC=ifort
+    export F90=ifort
+    export F95=ifort
+    export F77=ifort
+
     if [[ "${l_cvmix}" == "true" ]]; then
         cmake ${srcdir} -DGOTM_USE_FABM=false \
             -DCMAKE_INSTALL_PREFIX:PATH=${exedir} \
