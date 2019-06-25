@@ -25,7 +25,7 @@ function [out, data_info] = load_gotm_out()
 %% --------- gather data info using dialog box ----------------------------
 
 prompt = {'GOTMRUN root directory path:','Specific output path:',...
-    'Closure method used:'};
+    'Closure model used:'};
 title = 'Specify Output Data Information';
 dims = [1 100];
 
@@ -41,7 +41,7 @@ for i = 1:length(tmp)
     end
 end
 
-definput = {'~/Documents/GitLab/GOTM_dev/run/',char(run_dir),...
+definput = {'~/Documents/GitHub/GOTM/run/',char(run_dir),...
     char(method)};
 data_info = inputdlg(prompt,title,dims,definput);
 

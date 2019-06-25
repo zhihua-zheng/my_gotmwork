@@ -27,10 +27,10 @@ end
 %% MLD line plot ----------------------------------------------------------
 
 figure('position', [0, 0, 900, 300])
-line(time,-mld,'LineWidth',.4,'Color',rgb('pinkish'))
+line(time_model,-mld,'LineWidth',.4,'Color',rgb('pinkish'))
 
 plot_info.grid_on = 1;
-plot_info.x_lim = [time(1) time(end)];
+plot_info.x_lim = [time_model(1) time_model(end)];
 plot_info.y_lim = [];
 plot_info.xlabel = 'time';
 plot_info.ylabel = 'mixed layer depth (m)';

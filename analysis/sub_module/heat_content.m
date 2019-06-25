@@ -14,13 +14,15 @@ temp_obs = out.temp_obs;
 salt = out.salt;
 salt_obs = out.salt_obs;
 
+turb_method = data_info{3};
+
 % decide to use yearday or time string for x lable
 if lable_as_yd 
     plot_info.xlabel = []; 
     t = yd;
 else
     plot_info.xlabel = 'time';
-    t = time;
+    t = time_model;
 end
     
 %% Plot integrated heat info from observation ----------------------------

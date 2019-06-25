@@ -26,11 +26,16 @@ function A_filled = vert_fill(A,z,t)
 
 %% horizontal fill the surface and bottom
 
-A_surf   = A(1,:);
-A_bottom = A(end,:);
+A_surf = A(1,:);
+A_bot  = A(end,:);
 
-A(1,:)   = interp1(t(~isnan(A_surf)),A_surf(~isnan(A_surf)),t);
-A(end,:) = interp1(t(~isnan(A_bottom)),A_bottom(~isnan(A_bottom)),t);
+if sum(isnan(A_surf)) >= 1 && sum(~isnan(A_surf)) > 0
+    A(1,:) = interp1(t(~isnan(A_surf)),A_surf(~isnan(A_surf)),t);
+end
+
+if sum(isnan(A_bot)) >= 1 && sum(~isnan(A_bot)) > 0
+    A(end,:) = interp1(t(~isnan(A_bot)),A_bot(~isnan(A_bot)),t);
+end
 
 A_filled = A;
 
