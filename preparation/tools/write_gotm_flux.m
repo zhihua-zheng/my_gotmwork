@@ -13,15 +13,15 @@ function write_gotm_flux(Fname,A,time)
 %
 %  Fname - ASCII file name as a string, including path
 %  fmtSpec - Format of the field, specified using formatting operators
-%  A - Variable to be written (scalar, matrix or array)
-%  time - timestamp as a string (yyyy-mm-dd HH:MM:SS)
+%  A - (t,m) variable to be written
+%  time - 1D column vector, timestamp as a string (yyyy-mm-dd HH:MM:SS)
 %
 % OUTPUT:
 %
 %  status - Error flag
 %
 % AUTHOR:
-%  June 12 2019. Zhihua Zheng                             [ zhihua@uw.edu ]
+%  June 12 2019, Zhihua Zheng                             [ zhihua@uw.edu ]
 %==========================================================================
 
 

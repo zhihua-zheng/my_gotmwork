@@ -13,9 +13,9 @@ function write_gotm_ini(Fname,A,time,z)
 %
 %  Fname - ASCII file name as a string, including path
 %  fmtSpec - Format of the field, specified using formatting operators
-%  A - Variable to be written (scalar, matrix or array)
-%  time - Initial time as a string (yyyy-mm-dd HH:MM:SS)
-%  z - 1D column vector for vertical coordinates of field [-,m]
+%  A - 3D matrix (z,m,t), variable with dimension m to be written
+%  time - 1D vector, timestamp as a string (yyyy-mm-dd HH:MM:SS)
+%  z - 1D column vector, vertical coordinates (descending) of field [-,m]
 %
 % OUTPUT:
 %
@@ -28,19 +28,22 @@ function write_gotm_ini(Fname,A,time,z)
 
 fileID = fopen(Fname,'w');
 
-m    = length(z);
-Tfmt = ['%s  ',num2str(m),'  2\n'];
+im    = size(A,2);
+iz    = size(A,1);
 
-n = size(A,2);
-switch n
-    case 1    
-        fmtSpec = '%8.2f   %9.6f\n';
-    case 2
-        fmtSpec = '%8.2f   %9.6f   %9.6f\n';
+Tfmt  = ['%s  ',num2str(iz),'  ',num2str(im+1),'\n'];
+ifmt  = '   %9.6f';
+zfmt  = '%8.2f';
+
+VIfmt = repmat(ifmt,1,im);
+Vfmt  = strcat(zfmt,VIfmt,'\n');
+
+% loop through time-points
+for it = 1:length(time)
+    
+    fprintf(fileID,Tfmt,time(it));
+    fprintf(fileID,Vfmt,[z'; A(:,:,it)']);
 end
-
-fprintf(fileID,Tfmt,time);
-fprintf(fileID,fmtSpec,[z'; A']);
 
 fclose(fileID);
 
