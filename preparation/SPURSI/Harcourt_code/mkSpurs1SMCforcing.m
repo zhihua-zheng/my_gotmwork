@@ -70,7 +70,8 @@ fbin(1)=0.01;
 for ifr=1:nf, fbin(ifr+1)=2*fctr(ifr)-fbin(ifr); end
 df=diff(fbin);
 %1st band is for noise & uses instead 
-df(1)=0.010;
+df(1)=0.010; % I didn't apply this to freq.mat
+
 %last 3 are dummies:
 df(end-2:end)=0;
       

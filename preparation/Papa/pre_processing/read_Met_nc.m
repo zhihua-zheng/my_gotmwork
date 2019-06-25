@@ -9,7 +9,7 @@
 %% General setting
 
 clear
-data_dir = '~/Documents/Study/Grad_research/data/OCSP/Mooring/20070608_20190325/';
+data_dir = '~/GDrive/UW/Research/Data/OCSP/Mooring/20070608_20190616/';
 
 WINDname = fullfile(data_dir,'w50n145w_hr.cdf');
 SSTname  = fullfile(data_dir,'sst50n145w_hr.cdf');
@@ -58,7 +58,7 @@ Ta     =  ncread(AIRTname,'AT_21'); % AIR TEMPERATURE [C]
 z_Ta   = -ncread(AIRTname,'depth');
 t_Ta   =  ncread(AIRTname,'time'); 
 
-% -------- hours since 2007-06-07 23:00:00 -------------------------------- 
+% -------- hours since 2007-06-08 00:00:00 -------------------------------- 
 sst    =  ncread(SSTname,'T_25'); % [C]
 t_sst  =  ncread(SSTname,'time');
 
@@ -74,7 +74,7 @@ t_Rs   = ncread(RADname,'time');
 
 %% read profiles from netCDF files
 
-% hours since 2007-06-07 23:00:00
+% hours since 2007-06-08 00:00:00
 depth_t = ncread(Tname,'depth');
 tprof   = ncread(Tname,'T_20');
 
@@ -84,7 +84,7 @@ sprof   = ncread(Sname,'S_41');
 depth_d = ncread(Dname,'depth');
 dprof   = ncread(Dname,'STH_71');
 
-% minutes since 2007-06-07 23:00:00
+% minutes since 2007-06-08 00:00:00
 depth_cur = ncread(CURname,'depth');
 uprof     = ncread(CURname,'U_320'); % [cm/s]
 vprof     = ncread(CURname,'V_321'); % [cm/s]
@@ -129,22 +129,22 @@ t_sst  = double(t_sst);
 t_tsd  = double(t_tsd);
 t_cur  = double(t_cur);
 
-% ----- absolute time -----------------------------------------------------
-t_w    = datenum(2007,6,8,4,0,0)  + t_w/24;
-t_rh   = datenum(2007,6,8,4,0,0)  + t_rh/24;
-t_rain = datenum(2007,6,8,4,0,0)  + t_rain/24;
-t_Rl   = datenum(2007,6,8,4,0,0)  + t_Rl/24;
-t_P    = datenum(2007,6,8,4,0,0)  + t_P/24;
-t_Ta   = datenum(2007,6,8,4,0,0)  + t_Ta/24;
+% ------ absolute time ----------------------------------------------------
+t_w    = datenum(2007,6,8,4,0,0) + t_w/24;
+t_rh   = datenum(2007,6,8,4,0,0) + t_rh/24;
+t_rain = datenum(2007,6,8,4,0,0) + t_rain/24;
+t_Rl   = datenum(2007,6,8,4,0,0) + t_Rl/24;
+t_P    = datenum(2007,6,8,4,0,0) + t_P/24;
+t_Ta   = datenum(2007,6,8,4,0,0) + t_Ta/24;
 
-t_sst  = datenum(2007,6,7,23,0,0) + t_sst/24;
-t_sss  = datenum(2007,6,7,23,0,0) + t_sss/24;
-t_ssd  = datenum(2007,6,7,23,0,0) + t_ssd/24;
-t_tsd  = datenum(2007,6,7,23,0,0) + t_tsd/24;
-t_cur  = datenum(2007,6,7,23,0,0) + t_cur/24/60;
+t_sst  = datenum(2007,6,8,0,0,0) + t_sst/24;
+t_sss  = datenum(2007,6,8,0,0,0) + t_sss/24;
+t_ssd  = datenum(2007,6,8,0,0,0) + t_ssd/24;
+t_tsd  = datenum(2007,6,8,0,0,0) + t_tsd/24;
+t_cur  = datenum(2007,6,8,0,0,0) + t_cur/24/60;
 
-t_Rs   = datenum(2007,6,8,5,0,0)  + t_Rs/24;
-% ----- absolute time -----------------------------------------------------
+t_Rs   = datenum(2007,6,8,5,0,0) + t_Rs/24;
+% -------------------------------------------------------------------------
 
 sprof  = double(squeeze(squeeze(sprof)));
 tprof  = double(squeeze(squeeze(tprof)));
@@ -159,24 +159,24 @@ depth_sd  = depth_s; clear depth_s depth_d % depth_d is the same as depth_s
 
 %% Unify the timestamp for Met. variables
 
-% the first timestamp is actually the reference time
+% set the first timestamp: 2007-06-08 05:00:00
+time   = t_Rs;          
 
 w_u    = w_u(2:end);
 w_v    = w_v(2:end);
 w_spd  = w_spd(2:end);
 w_dir  = w_dir(2:end);
-w_gust = w_gust(2:end); clear t_w
-Ta     = Ta(2:end);     clear t_Ta
-rh     = rh(2:end);     clear t_rh
-P      = P(2:end);      clear t_P
-Rl     = Rl(2:end);     clear t_Rl
-rain   = rain(2:end);   clear t_rain
-time   = t_Rs;          
+w_gust = w_gust(2:end);   clear t_w
+Ta     = Ta(2:end);       clear t_Ta
+rh     = rh(2:end);       clear t_rh
+P      = P(2:end);        clear t_P
+Rl     = Rl(2:end);       clear t_Rl
+rain   = rain(2:end);     clear t_rain
 
 inx = find(t_sst==t_Rs(1));
-sst = sst(inx:end);     clear t_sst
-sss = sss(inx:end);     clear t_sss
-ssd = ssd(inx:end);     clear t_ssd
+sst = sst(inx:end);       clear t_sst
+sss = sss(inx:end);       clear t_sss
+ssd = ssd(inx:end);       clear t_ssd
 
 tprof = tprof(:,inx:end);
 sprof = sprof(:,inx:end);
@@ -187,8 +187,9 @@ vprof = vprof(:,inx:end); clear t_cur
 % some time series are shorter, fill with outlier
 rain = [rain; ones(length(rh)-length(rain),1)*1e35];
 sss  = [sss;  ones(length(rh)-length(sss), 1)*1e35];
+ssd  = [ssd;  ones(length(rh)-length(ssd), 1)*1e35];
 
 %% Save
 
 clear data_dir *name inx t_Rs
-save('~/Documents/Study/Grad_research/data/OCSP/Mooring/Met_IC_ocsp.mat');
+save('~/GDrive/UW/Research/Data/OCSP/Mooring/Met_IC_ocsp.mat');

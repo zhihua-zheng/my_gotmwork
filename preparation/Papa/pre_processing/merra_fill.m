@@ -11,11 +11,13 @@ function [P_r,sst_r,rain_r] = merra_fill(P,sst,rain,lat,lon,time)
 %    from PMEL OCSPapa mooring, using reanalysis product
 %    MERRA2 (https://gmao.gsfc.nasa.gov/reanalysis/MERRA-2/data_access/)
 %
-%  ocean rainfall and open water skin temperature are from Ocean Surface
-%  Diagnostics dataset 'tavg1_2d_ocn_Nx'.
+%  ocean_rainfall and open_water_skin_temperature are from Ocean Surface
+%  Diagnostics dataset 'tavg1_2d_ocn_Nx'. [-145.625,49.5,-144.375,50.5]
+%  (https://disc.gsfc.nasa.gov/datasets/M2T1NXOCN_V5.12.4/summary?keywords=%22MERRA-2%22)
 %
-%  sea level pressure is from Single-Level Diagnostics dataset
-%  'inst1_2d_asm_Nx'.
+%  sea_level_pressure is from Single-Level Diagnostics dataset
+%  'tavg1_2d_slv_Nx'. [-145.625,49.5,-144.375,50.5]
+%  (https://disc.gsfc.nasa.gov/datasets/M2T1NXSLV_V5.12.4/summary?keywords=%22MERRA-2%22)
 %
 % INPUT:
 %
@@ -39,7 +41,7 @@ function [P_r,sst_r,rain_r] = merra_fill(P,sst,rain,lat,lon,time)
 
 %% General setting
 
-merra_dir = '~/Documents/Study/Grad_research/data/OCSP/MERRA';
+merra_dir = '~/GDrive/UW/Research/Data/OCSP/MERRA';
 
 P_r    = P;
 sst_r  = sst;
@@ -52,7 +54,7 @@ bad_P = find(P>10000);
 ncvars =  {'lat','lon','SLP','time'};
 dinfo = dir(fullfile(merra_dir,'/slp/*.nc'));
 nFile = length(dinfo);
-filenames = fullfile(merra_dir,{dinfo.name});
+filenames = fullfile({dinfo.folder},{dinfo.name});
 
 lat_merra = ncread(filenames{1}, ncvars{1});
 lon_merra = ncread(filenames{1}, ncvars{2});
@@ -75,11 +77,11 @@ for K = 1:nFile
 
 end
 
-[X_merra, Y_merra, Z_merra] = meshgrid(lon_merra,lat_merra,t_merra(:));
+[X_merra, Y_merra, T_merra] = meshgrid(lon_merra,lat_merra,t_merra(:));
 slp = slp(:,:,:);
 
 % interpolate to get the barometric pressure at buoy site
-slp_papa = interp3(X_merra,Y_merra,Z_merra,slp,...
+slp_papa = interp3(X_merra,Y_merra,T_merra,slp,...
     (lon-360)*ones(size(bad_P)),lat*ones(size(bad_P)),time(bad_P))/100;
 % unit for sea level pressure in merra is Pa
 
@@ -118,17 +120,19 @@ for K = 1:nFile
 
 end
 
-[X_merra, Y_merra, Z_merra] = meshgrid(lon_merra,lat_merra,t_merra(:));
+[X_merra, Y_merra, T_merra] = meshgrid(lon_merra,lat_merra,t_merra(:));
 ts       = ts(:,:,:);
 rainfall = rainfall(:,:,:);
 
 % interpolate to get the SST and rain rate at buoy site
-ts_papa   = interp3(X_merra,Y_merra,Z_merra,ts,...
-    (lon-360)*ones(size(bad_sst)),lat*ones(size(bad_sst)),time(bad_sst))-273.15;
+ts_papa   = interp3(X_merra,Y_merra,T_merra,ts,...
+    (lon-360)*ones(size(bad_sst)),lat*ones(size(bad_sst)),...
+    time(bad_sst))-273.15;
 % unit for surface skin temperature in MERRA is Kelvin
 
-rain_papa = interp3(X_merra,Y_merra,Z_merra,rainfall,...
-    (lon-360)*ones(size(bad_rain)),lat*ones(size(bad_rain)),time(bad_rain))*3600; % [mm/hr]
+rain_papa = interp3(X_merra,Y_merra,T_merra,rainfall,...
+    (lon-360)*ones(size(bad_rain)),lat*ones(size(bad_rain)),...
+    time(bad_rain),'linear',0)*3600; % [mm/hr]
 % unit for rain rate in MERRA is kg/(m^2*s) ~ mm/s (no salt in rain)
 
 sst_r(bad_sst)   = ts_papa;

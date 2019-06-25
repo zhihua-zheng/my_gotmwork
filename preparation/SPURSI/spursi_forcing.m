@@ -8,15 +8,15 @@ clear
 
 %% Load Met. forcing, T-S profiles and Wave data
 
-data_dir = '~/Documents/Study/Grad_research/data/SPURSI/';
+mooring_dir = '~/GDrive/UW/Research/Data/SPURSI/Mooring/';
 
-MFname   = fullfile(data_dir,'SPURS_2012_D_M_1hr.nc'); % Meterological Forcing
-TSname   = fullfile(data_dir,'SPURS_2012_D_TS.nc'); % T-S profiles
-WDSname  = fullfile(data_dir,'wave_dir_spec/'); % Wave Directional Spectrum
+MFname  = fullfile(mooring_dir,'SPURS_2012_D_M_1hr.nc'); % Meterological Forcing
+TSname  = fullfile(mooring_dir,'SPURS_2012_D_TS.nc'); % T-S profiles
+WDS_dir = '~/GDrive/UW/Research/Data/SPURSI/WDS/'; % Wave Directional Spectrum
 
 lat_MF  = ncread(MFname,'LATITUDE');
 lon_MF  = ncread(MFname,'LONGITUDE');
-time = ncread(MFname,'TIME'); % days since t_ref
+time    = ncread(MFname,'TIME'); % days since t_ref
 
 % get the reference time
 t_ref = ncreadatt(MFname,'TIME','units'); % attribute 'units' for 'TIME'
@@ -63,25 +63,23 @@ salt     = ncread(TSname,'PSAL');
 %--------------------------------------------------------------------------
 
 % frequency bins for spectra
-load([WDSname,'fre']); % 1st bin is for noise, last 3 are dummy 0's
+load([WDS_dir,'freq']); % 1st bin is for noise, last 3 are dummy 0's
 
-WDSfiles = dir(WDSname);
-WDSfiles = WDSfiles(3:end-1);
+WDSfiles = dir([WDS_dir,'/41061_*.mat']);
+n_WDS    = length(WDSfiles);
+n_f      = length(df);
+g        = 9.81;
 
-n_WDS = length(WDSfiles);
-n_f   = length(df);
-g     = 9.81;
-
-time_WDS = zeros(n_WDS,1);
+time_WDS = zeros(1,  n_WDS);
 spec_h2  = zeros(n_f,n_WDS); 
 xcmp     = zeros(n_f,n_WDS); % fraction for x-direction component
 ycmp     = zeros(n_f,n_WDS); % fraction for y-direction component
 
 for j = 1:n_WDS
     
-    WDS = load([WDSname,WDSfiles(j).name]);
+    WDS = load([WDS_dir,WDSfiles(j).name]);
     
-    time_WDS(j) = WDS.mday;
+    time_WDS(j) = WDS.mday; % matlab datenumber
     
     % wave mean direction, switched to degree counter-clockwise from East,
     % pointing to where the waves are propagating toward
@@ -89,15 +87,15 @@ for j = 1:n_WDS
     xcmp(:,j)   = cosd(wave_mdir);
     ycmp(:,j)   = sind(wave_mdir);
     
-%     dU_St = 16*pi^3/g * WDS.c11 .* WDS.R1 .* f_ctr.^3 .* xcmp(:,j) .* df;
-%     dV_St = 16*pi^3/g * WDS.c11 .* WDS.R1 .* f_ctr.^3 .* ycmp(:,j) .* df;
+%     dU_St = 16*pi^3/g * WDS.c11 .* WDS.R1 .* fctr.^3 .* xcmp(:,j) .* df;
+%     dV_St = 16*pi^3/g * WDS.c11 .* WDS.R1 .* fctr.^3 .* ycmp(:,j) .* df;
 
-    % wave spectrum
+    % wave spectrum input for GOTM
     spec_h2(:,j) = WDS.c11 .* WDS.R1 .* df;
 
 end
 
-f_ctr   = f_ctr(1:end-3);
+fctr    = fctr(1:end-3);
 xcmp    = xcmp(1:end-3,:);
 ycmp    = ycmp(1:end-3,:);
 spec_h2 = spec_h2(1:end-3,:);
@@ -110,14 +108,14 @@ W_spd = sqrt(W_e.^2 + W_n.^2);
 
 % call COARE (3.5) bulk formula
 A = coare35vn(W_spd,z_W,T_a,z_RhTa,Rh,z_RhTa,P_a,T_s,Rs,...
-    Rl,lat_MF,NaN,Rain,NaN,NaN);
+              Rl,lat_MF,NaN,Rain,NaN,NaN);
 
 tau = A(:,2); % wind stress [N/m^2]
 hsb = A(:,3); % sensible heat flux into ocean [W/m^2]
 hlb = A(:,4); % latent heat flux into ocan [W/m^2]
 hbb = A(:,5); % surface buoyancy flux into ocean [W/m^2]
 
-% seperate wind stress component
+% seperate wind stress components
 w_cos = W_e ./ W_spd;
 w_sin = W_n ./ W_spd;
 tau_x = tau .* w_cos;
@@ -127,7 +125,7 @@ tau_y = tau .* w_sin;
 dVec_MF = datevec(time_MF);
 yd_MF   = date2doy(time_MF) - 1;
 nsw     = swhf(yd_MF,dVec_MF(:,1),-lon_MF*ones(size(time_MF)),...
-          lat_MF*ones(size(time_MF)),Rs);
+               lat_MF*ones(size(time_MF)),Rs);
           % longitude: west is positive!
 
 % compute net long wave heat flux into ocean
@@ -150,9 +148,9 @@ nhf = hsb + hlb + nlw;
 % temp_r = vert_fill(temp_hr,depth_TS);
 % salt_r = vert_fill(salt_hr,depth_TS);
 
-%% Project all data to WDS timeframe
+%% Project all data to WDS timeframe (shortest)
 
-indx  = find(time_WDS<time_MF(end),1,'last');
+indx  = find(time_WDS <= time_MF(end),1,'last');
 time  = time_WDS(1:indx);
 
 tau_x = interp1(time_MF, tau_x, time);
@@ -163,7 +161,7 @@ Rain  = interp1(time_MF, Rain,  time);
 T_s   = interp1(time_MF, T_s,   time);
 S_s   = interp1(time_MF, S_s,   time);
 
-% I don't know if initial condition should have same timeframe as forcing,
+% Not sure if initial conditions should have same timeframe as forcing,
 % but I'll make them the same anyway.
 
 % T-S profiles for writing out, in WDS timeframe
@@ -177,130 +175,43 @@ for i = 1:length(depth_TS)
 end
 
 % vertically interpolate to fill gaps
-temp_o = vert_fill(temp_o,depth_TS);
-salt_o = vert_fill(salt_o,depth_TS);
+temp_o = vert_fill(temp_o,depth_TS,time);
+salt_o = vert_fill(salt_o,depth_TS,time);
 
 %% Write out to files
 
-basecase = '../../data/SPURSI/';
+gotmdata_root = '~/Documents/GitHub/GOTM/gotmwork/data/';
+basecase      = [gotmdata_root,'SPURSI/'];
 
 date = string(datestr(time, 'yyyy-mm-dd HH:MM:SS'));
 
-%--------------------------------------------------------------------------
-fileID = fopen([basecase,'tau_file.dat'],'w');
-H = [cellstr(date) num2cell(tau_x) num2cell(tau_y)];
-formatSpec = '%s  % 8.6e % 8.6e\n';
+TAUname  = [basecase,'tau_file.dat'];
+HFname   = [basecase,'heatflux_file.dat'];
+RAINname = [basecase,'precip_file.dat'];
+SSSname  = [basecase,'sss_file.dat'];
+SSTname  = [basecase,'sst_file.dat'];
+SWRname  = [basecase,'swr_file.dat'];
+SPname   = [basecase,'sprof_file.dat'];
+TPname   = [basecase,'tprof_file.dat'];
+WDSname  = [basecase,'spec_file.dat']; % wave spectrum file
 
-for i = 1:size(H,1)
-    fprintf(fileID,formatSpec,H{i,:});
-end
+write_gotm_flux(TAUname,  [tau_x' tau_y'], date)
+write_gotm_flux(HFname,   nhf',            date)
+write_gotm_flux(RAINname, Rain',           date)
+write_gotm_flux(SSSname,  S_s',            date)
+write_gotm_flux(SSTname,  T_s',            date)
+write_gotm_flux(SWRname,  nsw',            date)
 
-fclose(fileID);
-%--------------------------------------------------------------------------
+temp_o3 = reshape(temp_o,length(depth_TS),1,length(time));
+salt_o3 = reshape(salt_o,length(depth_TS),1,length(time));
 
+write_gotm_ini(TPname,temp_o3,date,-depth_TS)
+write_gotm_ini(SPname,salt_o3,date,-depth_TS)
 
-%--------------------------------------------------------------------------
-fileID = fopen([basecase,'heatflux_file.dat'],'w');
-H = [cellstr(date) num2cell(nhf)];
-formatSpec = '%s   % 8.6e\n';
+waveInput  = cat(3,spec_h2,xcmp,ycmp);
+waveInput3 = permute(waveInput,[1 3 2]);
 
-for i = 1:size(H,1)
-    fprintf(fileID,formatSpec,H{i,:});
-end
+write_gotm_ini(WDSname,waveInput3,date,fctr)
 
-fclose(fileID);
-%--------------------------------------------------------------------------
-
-
-%--------------------------------------------------------------------------
-fileID = fopen([basecase,'precip_file.dat'],'w');
-H = [cellstr(date) num2cell(Rain)];
-formatSpec = '%s   % 8.6e\n';
-
-for i = 1:size(H,1)
-    fprintf(fileID,formatSpec,H{i,:});
-end
-
-fclose(fileID);
-%--------------------------------------------------------------------------
-
-
-%--------------------------------------------------------------------------
-fileID = fopen([basecase,'sst_file.dat'],'w');
-H = [cellstr(date) num2cell(T_s)];
-formatSpec = '%s %6.3f\n';
-
-for i = 1:size(H,1)
-    fprintf(fileID,formatSpec,H{i,:});
-end
-
-fclose(fileID);
-%--------------------------------------------------------------------------
-
-
-%--------------------------------------------------------------------------
-fileID = fopen([basecase,'sss_file.dat'],'w');
-H = [cellstr(date) num2cell(S_s)];
-formatSpec = '%s %6.3f\n';
-
-for i = 1:size(H,1)
-    fprintf(fileID,formatSpec,H{i,:});
-end
-
-fclose(fileID);
-%--------------------------------------------------------------------------
-
-
-%--------------------------------------------------------------------------
-fileID = fopen([basecase,'swr_file.dat'],'w');
-H = [cellstr(date) num2cell(nsw)];
-formatSpec = '%s  % 8.6e\n';
-
-for i = 1:size(H,1)
-    fprintf(fileID,formatSpec,H{i,:});
-end
-
-fclose(fileID);
-%--------------------------------------------------------------------------
-
-
-%--------------------------------------------------------------------------
-fileID = fopen([basecase,'sprof_file.dat'],'w');
-
-for i = 1:size(time,1)
-    
-    fprintf(fileID,'%s  37  2\n',date(i));
-    fprintf(fileID,'%6.1f   %9.6f\n',[-depth_TS'; salt_o(:,i)']);
-end
-
-fclose(fileID);
-%--------------------------------------------------------------------------
-
-
-%--------------------------------------------------------------------------
-fileID = fopen([basecase,'tprof_file.dat'],'w');
-
-for i = 1:size(time,1)
-    
-    fprintf(fileID,'%s  37  2\n',date(i));
-    fprintf(fileID,'%6.1f   %9.6f\n',[-depth_TS'; temp_o(:,i)']);
-end
-
-fclose(fileID);
-%--------------------------------------------------------------------------
-
-
-%--------------------------------------------------------------------------
-fileID = fopen([basecase,'spec_file.dat'],'w');
-
-for i = 1:size(time,1)
-    
-    fprintf(fileID,'%s  47  4\n',date(i));
-    fprintf(fileID,'%10.5f   %8.6e   % 8.6e   % 8.6e\n',...
-        [f_ctr'; spec_h2(:,i)'; xcmp(:,i)'; ycmp(:,i)']);
-end
-
-fclose(fileID);
-
-gzip([basecase,'spec_file.dat'])
-delete([basecase,'spec_file.dat'])
+gzip(WDSname)
+delete(WDSname)
