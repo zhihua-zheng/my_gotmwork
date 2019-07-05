@@ -56,17 +56,26 @@ mu2 = 1./[0.35 23];
 
 %% Band number 
 
+nz = length(z);
+
 if bn == 9
     
-    fr = sum(r9 .* exp(mu9*z));
+    R  = repmat(r9, nz,1);
+    MU = repmat(mu9,nz,1);
+    Z  = repmat(z(:),1,length(mu9));
+    
 elseif bn == 2
     
-    fr = sum(r2 .* exp(mu2*z));
+    R  = repmat(r2, nz,1);
+    MU = repmat(mu2,nz,1);
+    Z  = repmat(z(:),1,length(mu2));
+    
 else
     print('Band number not supported yet!')
 end
 
-Iz = I0*fr;
+fr = sum(R.*exp(MU.*Z),2);
+Iz = I0.*fr;
 
 end
 

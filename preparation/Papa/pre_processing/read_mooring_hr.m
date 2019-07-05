@@ -1,7 +1,8 @@
-%% read_Met_nc
+
+%% read_mooring_hr
 %
 % This the script used to read the meterological and subsurface observation
-% data from OCSPapa mooring, the MAT file is saved as 'Met_IC_ocsp.mat'.
+% data from OCSPapa mooring, the MAT file is saved as 'ocsp_2007_2019.mat'.
 
 % by Zhihua Zheng (UW/APL), updated on Mar. 25 2019
 
@@ -192,4 +193,4 @@ ssd  = [ssd;  ones(length(rh)-length(ssd), 1)*1e35];
 %% Save
 
 clear data_dir *name inx t_Rs
-save('~/GDrive/UW/Research/Data/OCSP/Mooring/Met_IC_ocsp.mat');
+save('~/GDrive/UW/Research/Data/OCSP/Mooring/ocsp_2007_2019.mat');

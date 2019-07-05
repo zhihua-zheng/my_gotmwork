@@ -53,9 +53,9 @@ clear
 ocsp_dir = '~/GDrive/UW/Research/Data/OCSP/';
 
 % load the whole workspace as a struct
-met_data = load([ocsp_dir,'Mooring/Met_2007_2019.mat']); 
+met_data = load([ocsp_dir,'Mooring/Met_2007_2019_raw.mat']); 
 
-load([ocsp_dir,'Mooring/Met_2007_2019.mat'])
+load([ocsp_dir,'Mooring/Met_2007_2019_raw.mat'])
 load([ocsp_dir,'CDIP/Wave_2010.mat'])
 
 % set the negative values of rain data to outlier
@@ -165,6 +165,25 @@ save([ocsp_dir,'Mooring/profs.mat'],...
     'dprof_r','depth_t','z_tsd','time','time_r')
 
 clear depth_sd depth_t
+
+% save meteorological variables
+MET.w_u  = w_u_r;
+MET.w_v  = w_v_r;
+MET.P    = P_r;
+MET.Ta   = Ta_r;
+MET.rh   = rh_r;
+MET.Rs   = Rs_r;
+MET.Rl   = Rl_r;
+MET.sst  = sst_r;
+MET.sss  = sss_r;
+MET.ssd  = ssd_r;
+MET.rain = rain_r;
+MET.zw   = z_wind;
+MET.zTa  = z_Ta;
+MET.zrh  = z_rh;
+MET.time = time_r;
+
+save([ocsp_dir,'Mooring/Met_2009_2019.mat'],'MET')
 
 %% Time Conversion
 

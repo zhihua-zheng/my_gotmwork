@@ -29,11 +29,13 @@ wave_a1 = ncread(NCname,'waveA1Value');
 wave_b1 = ncread(NCname,'waveB1Value');
 
 % Directional spreading function at frequency f:
-% D(theta) = 1/pi( 1/2 + sum{ An*cos(n*theta) + Bn*sin(n*theta)} )
+% D(theta) = 1/pi( 1/2 + sum{ An*cos(n*theta) + Bn*sin(n*theta) } )
 
 % band mean direction (from), in degree clockwise from true North
 wave_mdir = ncread(NCname,'waveMeanDirection'); 
 % equivalent to theta_1 = atan2(wave_b1,wave_a1)*180/pi + 360; (verified!)
+
+wave_Hs = ncread(NCname,'waveHs'); % [m]
 
 %% timestamp
 
