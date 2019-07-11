@@ -28,8 +28,9 @@ function write_gotm_ini(Fname,A,time,z)
 
 fileID = fopen(Fname,'w');
 
-im    = size(A,2);
-iz    = size(A,1);
+iz = size(A,1);
+im = size(A,2);
+it = size(A,3);
 
 Tfmt  = ['%s  ',num2str(iz),'  ',num2str(im+1),'\n'];
 ifmt  = '   %9.6f';
@@ -39,10 +40,18 @@ VIfmt = repmat(ifmt,1,im);
 Vfmt  = strcat(zfmt,VIfmt,'\n');
 
 % loop through time-points
-for it = 1:length(time)
+if it > 1
+
+  for k = 1:it
     
-    fprintf(fileID,Tfmt,time(it));
-    fprintf(fileID,Vfmt,[z'; A(:,:,it)']);
+      fprintf(fileID,Tfmt,time(k));
+      fprintf(fileID,Vfmt,[z'; A(:,:,k)']);
+  end
+
+else
+
+  fprintf(fileID,Tfmt,time);
+  fprintf(fileID,Vfmt,[z'; A']);
 end
 
 fclose(fileID);
