@@ -1,6 +1,5 @@
 function rotary_spec(f, p_cur, f_in, save_switch)
-
-
+%
 % rotary_spec
 %==========================================================================
 %
@@ -22,7 +21,8 @@ function rotary_spec(f, p_cur, f_in, save_switch)
 %  figure of velocity power spectrum with detailed annotation
 %
 % AUTHOR:
-%  September 5 2018. Zhihua Zheng                       [ zhihua@uw.edu ]
+%  September 5 2018, Zhihua Zheng                         [ zhihua@uw.edu ]
+%==========================================================================
 
 
 n = length(f);

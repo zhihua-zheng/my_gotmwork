@@ -47,10 +47,9 @@ col_nan = unique(cols);
 for j = 1:length(col_nan)
     
     tmp = A(:,col_nan(j));
-    A_filled(:,col_nan(j)) = interp1(z(~isnan(tmp)),tmp(~isnan(tmp)),z);
+    A_filled(:,col_nan(j)) = interp1(z(~isnan(tmp)),tmp(~isnan(tmp)),z,...
+                                     'linear','extrap');
 end
     
-
-
 end
 
