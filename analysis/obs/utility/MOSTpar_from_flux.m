@@ -40,16 +40,18 @@ switch casename
     case 'Papa'
         moor_dir  = [my_root,'OCSP/Mooring/'];
         wave_dir  = [my_root,'OCSP/CDIP/'];
-        Fname     = fullfile(moor_dir,'PMEL_flux_hr.mat');
+        Fname     = fullfile(moor_dir,'ocsp_flux_hrPMEL.mat');
         DWSname   = fullfile(wave_dir,'Wave_2010.mat');
         waterType = 4;
-%         lat       = 50.1*ones(size(idatm));
-%         lon       = 144.9*ones(size(idatm));
+        lat       = 50.1;
+        lon       = 144.9;
         
     case 'SPURSI'
         moor_dir  = [my_root,'SPURSI/Mooring/'];
-        Fname     = fullfile(moor_dir,'spursi_flux_hr.mat');
+        Fname     = fullfile(moor_dir,'spursi_flux_hrUOP.mat');
         waterType = 1;
+        lat       = 24.5811;
+        lon       = 38;
 end
 
 M = load(Fname);
@@ -63,12 +65,12 @@ M = load(Fname);
 %% Constants
 
 rho0    = 1027; % reference density [kg/m^3]
-theta0  = 10;   % reference temperature [C]
-s0      = 33;   % reference salinity [g/kg]
-
-alpha0 = 1.66e-4; % thermal expansion coefficient [1/C]
-beta0  = 7.6e-4;  % saline contraction coefficient [kg/g]
-cp0    = gsw_cp0; % specific heat of seawater [J/kg/C]
+% theta0  = 10;   % reference temperature [C]
+% s0      = 33;   % reference salinity [g/kg]
+% 
+% alpha0 = 1.66e-4; % constant thermal expansion coefficient [1/C]
+% beta0  = 7.6e-4;  % constant saline contraction coefficient [kg/g]
+% cp0    = gsw_cp0; % constant specific heat of seawater [J/kg/C]
 kappa  = 0.4;     % von Karman's constant
 g      = 9.81;
 
@@ -98,6 +100,14 @@ FS.Inighti = allN(Ninter);
 % srise = datetime(yr,mon,da,rhr-1,0,0);
 % sset  = datetime(yr,mon,da,shr+1,0,0);
 
+%% Environmental dependent coefficients
+
+ssSA = gsw_SA_from_SP(SF.sss,0,lon,lat); % [g/kg]
+ssCT = gsw_CT_from_t(ssSA,SF.sst,0);
+
+cp = gsw_cp_t_exact(ssSA,SF.sst,0); % isobaric heat capacity of seawater [J/kg/C]
+[~,alpha,beta] = gsw_specvol_alpha_beta(ssSA,ssCT,0);
+
 %% Kinematic fluxes due to turbulent processes
 
 % net surface heat flux Qtur
@@ -108,11 +118,11 @@ Qtur = SF.hlb + SF.hsb + SF.nlw; % [W/m^2]
 Ftur = (SF.rain - SF.evap)/1000/3600; % [m/s]
 
 % surface kinematic fluxes
-w_u_0     = -SF.tau_x/rho0;
-w_v_0     = -SF.tau_y/rho0;
-w_theta_0 = -Qtur/(rho0*cp0); % <w't'> [C*m/s]
-w_s_0     =  Ftur.*s0; % <w's'> [(g/kg)*(m/s)]
-w_b_0     =  g*(alpha0.*w_theta_0 - beta0.*w_s_0);
+% w_u_0     = -SF.tau_x/rho0;
+% w_v_0     = -SF.tau_y/rho0;
+w_theta_0 = -Qtur./cp/rho0; % <w't'> [C*m/s]
+w_s_0     =  Ftur.*ssSA;    % <w's'> [(g/kg)*(m/s)]
+w_b_0     =  g*(alpha.*w_theta_0 - beta.*w_s_0); % <w'b'> [m^2/s^3]
 
 %% Fluxes due to non-turbulent processes
 
@@ -130,8 +140,8 @@ switch depth_SR
     Iz = get_SRz(SF.nsw,z_inq,9,waterType);
 end
 
-w_theta_r = -(SF.nsw - Iz)/(rho0*cp0);
-w_b_r     = g*alpha0*w_theta_r;
+w_theta_r = -(SF.nsw - Iz)./cp/rho0;
+w_b_r     = g*alpha.*w_theta_r;
 
 %% MOST parameters
 
