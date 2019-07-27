@@ -1,10 +1,10 @@
-function [phiS,phiM] = get_theo_MOST(zeta)
+function [phiS,phiM] = get_theo_phi(zeta)
 %
-% get_theo_MOST
+% get_theo_phi
 %==========================================================================
 %
 % USAGE:
-%  [phiS,phiM] = get_theo_MOST(zeta)
+%  [phiS,phiM] = get_theo_phi(zeta)
 %
 % DESCRIPTION:
 %  Compute empirical Monin-Obukhov similarity functions for scalars and

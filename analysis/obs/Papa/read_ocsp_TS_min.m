@@ -57,32 +57,46 @@ sprof(qsprof==0 | qsprof==4 | qsprof==5) = NaN;
 % tprof here has already been filtered by 13 points Hanning window
 
 [TM,Z] = meshgrid(time_t,-depth_t);figure;
-contourf(TM,Z,tprof,'linestyle','none');datetick('x','yyyy')
+contourf(TM,Z,tprof,'linestyle','none');datetick('x','yyyy');ylim([-100 0])
 
 tprof  = tprof';
-sprof  = sprof';
 datmE  = datm_s - minutes(30);
 
 Tprof  = timetable(datm_t,tprof);
-THprof = retime(Tprof,datmE,'mean');
+THprof = retime(Tprof,datmE,'mean'); % hourly average
 THprof.datm_t = datm_s;
 % test   = retime(Tprof,datm_s,'mean');
 
-sproff = vert_fill(sprof',depth_s,time_s);
-SAprof = gsw_SA_from_SP(sproff,depth_s,lon,lat);
-SAprof = interp1(depth_s,SAprof,depth_t,'linear','extrap')';
-PTprof = gsw_pt0_from_t(SAprof,THprof.tprof,depth_t);
-datm   = datm_s;
+sproff  = vert_fill(sprof,depth_s,time_s);
+
+SAprof  = gsw_SA_from_SP(sprof,depth_s,lon,lat)';
+SAproff = gsw_SA_from_SP(sproff,depth_s,lon,lat)';
+SAproff = interp1(depth_s,SAproff',depth_t,'linear','extrap')';
+
+PTprof  = gsw_pt0_from_t(SAproff,THprof.tprof,depth_t);
+datm    = datm_s;
 
 [TM,Z] = meshgrid(time_s,-depth_t);figure;
-contourf(TM,Z,PTprof','linestyle','none');datetick('x','yyyy')
+contourf(TM,Z,PTprof','linestyle','none');datetick('x','yyyy');ylim([-100 0])
+
+%% Buoyancy
+
+g      = 9.81;
+CTprof = gsw_CT_from_pt(SAproff,PTprof);
+PDprof = gsw_sigma0(SAproff,CTprof);
+contourf(TM,Z,PDprof','linestyle','none');datetick('x','yyyy')
+
+ALPHAprof = gsw_alpha(SAproff,CTprof,depth_t);
+BETAprof  = gsw_beta(SAproff,CTprof,depth_t);
+
+Bprof   = g*(ALPHAprof.*CTprof - BETAprof.*SAproff);
+NSQprof = center_diff(Bprof,-depth_t',2,'mid'); % buoyancy frequency squared [1/s^2]
 
 %% Timestable
 
-PROF = timetable(datm,PTprof,SAprof);
+PROF = timetable(datm,PTprof,SAprof,PDprof,Bprof,NSQprof);
 
 %% Save
 
 save('~/GDrive/UW/Research/Data/OCSP/Mooring/ocsp_prof_hrBox.mat',...
      'depth_t','depth_s','PROF');
- 
