@@ -1,10 +1,10 @@
-function [Lo,Bf,FS] = MOSTpar_from_flux(idatm,z_inq,casename,sld)
+function [Lo,zeta,FS] = MOSTpar_from_flux(idatm,zz,casename,sld)
 %
 % MOSTpar_from_flux
 %==========================================================================
 %
 % USAGE:
-%  [Lo,Bf,FS] = MOSTpar_from_flux(idatm,z_inq,casename,sld)
+%  [Lo,zeta,FS] = MOSTpar_from_flux(idatm,z_inq,casename,sld)
 %
 % DESCRIPTION:
 %  Compute parameters associated with Monin-Obukhov similarity theory for 
@@ -13,20 +13,20 @@ function [Lo,Bf,FS] = MOSTpar_from_flux(idatm,z_inq,casename,sld)
 % INPUT:
 %
 %  idatm - 1-D column vector of MATLAB datetime for the inquired period
-%  z_inq - vertical coordinates for evaluation depth  [-, m]
+%  zz - vertical coordinates for the choosen 2 levels [-, m]
 %  casename - string to indicate the parameters for which cases is inquired
-%  sld - 
+%  sld - surface layer depth (optional) [+, m]
 %         
 % OUTPUT:
 %
 %  Lo - Monin-Obukhov lenght for evaluated depth [m]
-%  Bf - surface buoyancy forcing [m^2/s^3]
+%  zeta - Monin-Obukhov stability parameter
 %  FS - struct contains turbulence scale for velocity (Ustar), temperature 
-%       (Tstar), salinity (Sstar), and edge/interior indices for night time
-%       period (Inighte/Inighti)
+%       (Tstar), salinity (Sstar), buoyancy (Bstar), buoyancy forcing Bf 
+%       and edge/interior indices for night time period (Inighte/Inighti)   
 %
 % AUTHOR:
-%  Jul1 29 2019, Zhihua Zheng                             [ zhihua@uw.edu ]
+%  June 29 2019, Zhihua Zheng                             [ zhihua@uw.edu ]
 %==========================================================================
 
 %% Parsing inputs
@@ -76,9 +76,10 @@ g      = 9.81;
 
 %% Grab fluxes according to inquired time
 
-index = M.SF.datm >= idatm(1) & M.SF.datm <= idatm(end);
+ntm   = length(idatm);
+index = isbetween(M.SF.datm,idatm(1),idatm(ntm));
 SF    = M.SF(index,:);
-% SF    = retime(SF,'regular','mean','TimeStep',hours(3));
+% SF  = retime(SF,'regular','mean','TimeStep',hours(3));
 
 % find night time indices based on solar radiation, excluding transition
 % periods (edges)
@@ -94,18 +95,24 @@ Ninter = setdiff(1:length(allN),Nedge);
 FS.Inighte = allN(Nedge);
 FS.Inighti = allN(Ninter);
 
-% plot(SF.datm,SF.nsw);hold on; plot(SF.datm(FS.Inighte),SF.nsw(FS.Inighte),'.')
+% plot(SF.datm,SF.nsw);hold on;
+% plot(SF.datm(FS.Inighte),SF.nsw(FS.Inighte),'.');axis tight
 
 % [rhr,rmin,shr,smin] = sunrise(mon,da,yr,lat,lon);
 % srise = datetime(yr,mon,da,rhr-1,0,0);
 % sset  = datetime(yr,mon,da,shr+1,0,0);
 
-%% Environmental dependent coefficients
+%% T-S dependent coefficients
 
+% ignore the depth-dependence as T-S variation with depth is small
+
+% sea surface SA and CT
 ssSA = gsw_SA_from_SP(SF.sss,0,lon,lat); % [g/kg]
 ssCT = gsw_CT_from_t(ssSA,SF.sst,0);
 
-cp = gsw_cp_t_exact(ssSA,SF.sst,0); % isobaric heat capacity of seawater [J/kg/C]
+% isobaric heat capacity of seawater [J/kg/C]
+cp = gsw_cp_t_exact(ssSA,SF.sst,0);
+
 [~,alpha,beta] = gsw_specvol_alpha_beta(ssSA,ssCT,0);
 
 %% Kinematic fluxes due to turbulent processes
@@ -113,59 +120,78 @@ cp = gsw_cp_t_exact(ssSA,SF.sst,0); % isobaric heat capacity of seawater [J/kg/C
 % net surface heat flux Qtur
 Qtur = SF.hlb + SF.hsb + SF.nlw; % [W/m^2]
 
-% surface freshwater flux
-% SF.rain(isnan(SF.rain)) = 0; % NaNs will dramatically decrease the amount of useful data
+% surface freshwater flux into the ocean
 Ftur = (SF.rain - SF.evap)/1000/3600; % [m/s]
 
 % surface kinematic fluxes
-% w_u_0     = -SF.tau_x/rho0;
-% w_v_0     = -SF.tau_y/rho0;
+% w_u_0   = -SF.tau_x/rho0;
+% w_v_0   = -SF.tau_y/rho0;
 w_theta_0 = -Qtur./cp/rho0; % <w't'> [C*m/s]
 w_s_0     =  Ftur.*ssSA;    % <w's'> [(g/kg)*(m/s)]
 w_b_0     =  g*(alpha.*w_theta_0 - beta.*w_s_0); % <w'b'> [m^2/s^3]
 
 %% Fluxes due to non-turbulent processes
 
-depth_SR = 2;
+z1      = zz(1);
+z2      = zz(2);
+zdum    = linspace(z2,z1)'; % dummy variable for integration
+band_SR = 9; % solar radiation band model
 
-switch depth_SR
+switch band_SR
     
     case 0
     Iz = 0;
     
     case 2     % 2-band exponential decay of solar radiation
-    Iz = get_SRz(SF.nsw,z_inq,2,waterType);
+    Iz = get_SRz(SF.nsw,zdum,2,waterType);
     
     case 9     % 9-band exponential decay of solar radiation
-    Iz = get_SRz(SF.nsw,z_inq,9,waterType);
+    Iz = get_SRz(SF.nsw,zdum,9,waterType);
 end
 
-w_theta_r = -(SF.nsw - Iz)./cp/rho0;
-w_b_r     = g*alpha.*w_theta_r;
+% obeject for array-vector division
+avd = dsp.ArrayVectorDivider('Dimension',2);
+
+% obeject for array-vector multiplication
+avm = dsp.ArrayVectorMultiplier('Dimension',2);
+
+% obeject for array-vector subtraction
+avs = dsp.ArrayVectorSubtractor('Dimension',2);
+
+% obeject for array-vector addition
+ava = dsp.ArrayVectorAdder('Dimension',2);
+
+w_theta_r = -avd( -avs(Iz,SF.nsw'), cp')/rho0;
+w_b_r     =  g*avm(w_theta_r,alpha');
 
 %% MOST parameters
 
-% surface buoyancy forcing
-Bf = -(w_b_0 + w_b_r);
+% buoyancy forcing
+FS.Bf = -ava(w_b_r,w_b_0');
 
 % friction scales
 FS.Ustar =  sqrt(SF.tau/rho0);
-FS.Tstar = -(w_theta_0 + w_theta_r) ./ FS.Ustar / kappa;
-FS.Sstar =  w_s_0 ./ FS.Ustar / kappa;
+FS.Sstar = -w_s_0 ./ FS.Ustar / kappa;
+FS.Tstar = -avd( ava(w_theta_r,w_theta_0'), FS.Ustar') / kappa;
+FS.Bstar = -avd( ava(w_b_r,    w_b_0'    ), FS.Ustar') / kappa;
 
 if exist('sld','var')
     
-    DWS     = load(DWSname);
-    WQ      = retime(DWS.WQ,datm_inq,'linear');
-    zSt     = (-30:.2:0)';
+    DWS = load(DWSname);
+    WQ  = retime(DWS.WQ,datm_inq,'linear');
+    zSt = (-30:.2:0)';
     
     [uSt,vSt] = St_from_dws(WQ,DWS.wave_freq,DWS.wave_bw,zSt);
     FS.SD_sl  = get_St_SL(uSt,vSt,zSt,sld);
     
-    Lo = FS.Ustar.^2 .* FS.SD_sl' ./ Bf / kappa; % Obukhov-Langmuir length [m]
+    % Obukhov-Langmuir length [m]
+    Lo = FS.Ustar.^2 .* FS.SD_sl' ./ Bf / kappa;
 else
-    Lo = FS.Ustar.^3 ./ Bf / kappa; % Obukhov length [m]
+    Lo = avm(1./FS.Bf, FS.Ustar'.^3) / kappa; % Obukhov length [m]
 end
+
+% stability parameter
+zeta = abs(repmat(zdum,1,ntm)) ./ Lo;
 
 end
 
