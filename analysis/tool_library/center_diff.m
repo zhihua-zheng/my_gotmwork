@@ -42,9 +42,10 @@ end
 if strcmp(method,'mid')
 
 % determine differential dimension and repeating dimension
+
 switch dim
     case 1 % first dimension
-    grad_F = zeros(m-1,n,l)*NaN;
+    grad_F = nan(m-1,n,l);
     
     for k = 1:l
         for j = 1:n
@@ -55,7 +56,7 @@ switch dim
     end
 
     case 2 % second dimension
-    grad_F = zeros(m,n-1,l)*NaN;
+    grad_F = nan(m,n-1,l);
     
     for k = 1:l
         for i = 1:m
@@ -66,7 +67,7 @@ switch dim
     end
     
     case 3 % third dimension
-    grad_F = zeros(m,n-1,l)*NaN;
+    grad_F = nan(m,n-1,l);
     
     for j = 1:n
         for i = 1:m

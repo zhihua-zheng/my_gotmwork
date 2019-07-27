@@ -21,7 +21,7 @@ function Iz = get_SRz(I0,z,bn,Jtype)
 % 
 % OUTPUT:
 %
-%  Iz - value of solar radiation at depth z
+%  Iz - magnitude of solar radiation at level z
 %
 % AUTHOR:
 %  June 23 2019, Zhihua Zheng                             [ zhihua@uw.edu ]
@@ -52,7 +52,7 @@ end
 
 
 r2  = [0.58 0.42];
-mu2 = 1./[0.35 23];
+mu2 = 1 ./ [0.35 23];
 
 %% Band number 
 
@@ -62,20 +62,19 @@ if bn == 9
     
     R  = repmat(r9, nz,1);
     MU = repmat(mu9,nz,1);
-    Z  = repmat(z(:),1,length(mu9));
     
 elseif bn == 2
     
     R  = repmat(r2, nz,1);
     MU = repmat(mu2,nz,1);
-    Z  = repmat(z(:),1,length(mu2));
     
 else
     print('Band number not supported yet!')
 end
 
-fr = sum(R.*exp(MU.*Z),2);
-Iz = I0.*fr;
+Z  = repmat(z(:),1,bn);
+fr = sum(R .* exp(MU .* Z),2);
+Iz = fr*I0';
 
 end
 
