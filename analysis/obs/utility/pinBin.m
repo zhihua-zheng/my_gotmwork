@@ -43,12 +43,14 @@ alpL = (1-conf)/2;
 alpU = 1-alpL;
 
 % loop through each bins
-S.qm   = nan(nbin,nq);
-S.n    = zeros(size(S.qm));
-S.qstd = zeros(size(S.qm));
+S.qm   = nan(nbin,nq);      % sample mean
+S.n    = zeros(size(S.qm)); % sample size
+S.qstd = zeros(size(S.qm)); % standard deviation
 S.dof  = zeros(size(S.qm));
-S.tupp = zeros(size(S.qm));    
-    
+S.tupp = zeros(size(S.qm)); 
+S.qmL  = zeros(size(S.qm)); 
+S.qmU  = zeros(size(S.qm)); 
+
 for i = 1:nbin
     
     switch eMethod
@@ -62,7 +64,29 @@ for i = 1:nbin
     qBin        = q(bInx,:);
     S.n(i,:)    = sum(~isnan(qBin));
     S.qm(i,:)   = nanmean(qBin);
-    S.qstd(i,:) = nanstd(qBin);    
+    S.qstd(i,:) = nanstd(qBin);
+    
+    if min(S.n(i,:)) >= 5
+        
+    % empirical bootstrap method for confidence limits of sample mean
+    % resample size is the same as original sample
+    % resampling with replacement from the rows of original data
+    nboot     = 1000; % numebr of resamples
+    [bootM,~] = bootstrp(nboot,@mean,qBin');
+    
+    % the variation of sample mean S.qm is well approximated by the
+    % variation of resmaple mean bootm
+    boot_delta  = bootM - repmat(S.qm(i,:),nboot,1);
+    qm_delta    = prctile(boot_delta,100*[alpL,alpU]);
+    S.qmL(i,:)  = qm_delta(2);
+    S.qmU(i,:)  = -qm_delta(1);
+    
+    else
+        
+    S.qmL(i,:) = NaN;
+    S.qmU(i,:) = NaN;
+        
+    end
 end
 
 S.dof = S.n - 1; % degree of freedom
@@ -72,7 +96,7 @@ S.dof(S.dof <= 0) = NaN;
 S.tupp = tinv(alpU,S.dof);
 % S.tlow = tinv(alpL,S.dof);
 
-S.qerr = S.tupp .* S.qstd ./ sqrt(S.dof);
+S.qerr = S.tupp .* S.qstd ./ sqrt(S.dof); % symmetric confidence limits
 
 end
 
