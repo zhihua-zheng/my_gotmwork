@@ -1,10 +1,10 @@
 
 %% read_spursi_TS_min
 %
-% This the script used to read subsurface observation
-% data from SPURS-I mooring, the MAT file is saved as 'spursi_prof_hrBox.mat'.
+% Script to read subsurface observational data from SPURS-I mooring
+% MAT file is saved as 'spursi_prof_hrBox.mat'.
 
-% Zhihua Zheng (UW/APL), updated on July 17 2019
+% Zhihua Zheng, UW-APL, July 17 2019
 
 %% General setting
 
@@ -73,11 +73,14 @@ rho0   = 1025;
 CTprof = gsw_CT_from_pt(SAproff,PTprof);
 PDprof = gsw_sigma0(SAproff,CTprof);
 
-% ALPHAprof = gsw_alpha(SAproff,CTprof,depth_t);
-% BETAprof  = gsw_beta(SAproff,CTprof,depth_s);
+ALPHAprof = gsw_alpha(SAproff,CTprof,depth_t);
+BETAprof  = gsw_beta(SAproff,CTprof,depth_s);
+Bprof     = g*(ALPHAprof.*CTprof - BETAprof.*SAproff);
 
-% Bprof = g*(ALPHAprof.*CTprof - BETAprof.*SAproff);
-Bprof   = -g/rho0*(PDprof - nanmean(PDprof,2));
+% mPDprof    = mean(PDprof,1);
+% PDprof_bar = interp1(-depth_t(~isnan(mPDprof)),mPDprof(~isnan(mPDprof)),-depth_t');
+% Bprof   = -g/rho0*(1000+PDprof);
+
 NSQprof = center_diff(Bprof,-depth_t',2,'mid'); % buoyancy frequency squared [1/s^2]
 
 %% Timetable
