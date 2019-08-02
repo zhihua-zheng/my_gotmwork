@@ -72,7 +72,7 @@ for i = 1:nbin
     % resample size is the same as original sample
     % resampling with replacement from the rows of original data
     nboot     = 1000; % numebr of resamples
-    [bootM,~] = bootstrp(nboot,@mean,qBin');
+    [bootM,~] = bootstrp(nboot,@nanmean,qBin');
     
     % the variation of sample mean S.qm is well approximated by the
     % variation of resmaple mean bootm

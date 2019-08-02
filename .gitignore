@@ -4,6 +4,7 @@
 *.log
 *.dat
 *.pdf
+*.jpg
 *.png
 *.eps
 *.ps

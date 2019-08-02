@@ -4,7 +4,7 @@ function mld = get_mld(A, z, flag, z_ref)
 %==========================================================================
 %
 % USAGE:
-%  mld = get_mld(A, z, flag)
+%  mld = get_mld(A, z, flag, z_ref)
 %
 % DESCRIPTION:
 %  Compute the mixed layer depth from the density/temperature profile

@@ -28,7 +28,7 @@ kappa = 0.4;
 zmid  = mean(zz);
 
 % law of wall approximation of velocity shear frequency squared [1/s^2]
-S2 = (Ustar ./ (kappa*abs(zmid))).^2;
+S2 = (Ustar ./ (kappa*zmid)).^2;
 
 % buoyancy frequency squared [1/s^2]
 N2 = center_diff(Bzz,zz,1,'mid');
