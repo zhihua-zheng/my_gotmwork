@@ -1,21 +1,23 @@
-function mld = get_mld(A, z, flag, z_ref)
+function mld = get_mld(A,z,flag,z_ref)
 %
 % get_mld
 %==========================================================================
 %
 % USAGE:
-%  mld = get_mld(A, z, flag, z_ref)
+%  mld = get_mld(A,z,flag,z_ref)
 %
 % DESCRIPTION:
-%  Compute the mixed layer depth from the density/temperature profile
+%  Compute the mixed layer depth from the density, temperature, or bulk 
+%   Richardson number profile
 %
 % INPUT:
 %
-%  A - 2-D matrix (z,t) containing density/temperature profiles
-%  z - 1-D column vector with vertical coordinates for density/temperature 
-%      profile, bottom to top [-, m]
+%  A - 2-D matrix (z,t) containing density, temperature or Rib profiles
+%  z - 1-D column vector with vertical coordinates for profiles, bottom
+%      to top [-, m]
 %  flag - 1 density criteria (de Boyer Montégut et al. 2004)
 %         2 temperature criteria (de Boyer Montégut et al. 2004)
+%         3 bulk Richardson number criteria
 %  zref - reference depth (-1, -10)
 %     
 % OUTPUT:
@@ -39,7 +41,7 @@ switch flag
         % Get reference values
         sigma_ref = zeros(1,ntm);
         for j = 1:ntm
-            goodi     = ~isnan(sigma(:,j));
+            goodi = ~isnan(sigma(:,j));
             if sum(goodi) < 2
                 sigma_ref(j) = NaN;
             else
@@ -59,7 +61,7 @@ switch flag
         % Get reference values
         temp_ref = zeros(1,ntm);
         for j = 1:ntm
-            goodi     = ~isnan(temp(:,j));
+            goodi = ~isnan(temp(:,j));
             if sum(goodi) < 2
                 temp_ref(j) = NaN;
             else
@@ -71,13 +73,19 @@ switch flag
         % a surface reference value at 10 m (de Boyer Montégut et al. 2004),
         % or at 1 m (considering shallow surface layer)   
         dval = temp_ref - 0.2;
-        where_mld = temp - repmat(dval,nz,1);
+        where_mld = repmat(dval,nz,1) - temp;
+        
+    case 3
+        Rib = A;
+        Ric = 1;
+        where_mld = Rib - Ric;
 end
   
+%% interpolate to find where the zero is
+
 mld = zeros(ntm,1);
 for j = 1:ntm
 
-    % interpolate to find where the zero is
     mldj   = where_mld(:,j);
     tmp    = mldj(~isnan(mldj));
 
@@ -86,8 +94,12 @@ for j = 1:ntm
     else
         tmpz   = z(~isnan(mldj));
         mldD   = find(tmp>0,1,'last');
-        mldU   = find(tmp<0,1,'first');
-        mld(j) = -interp1(tmp([mldD,mldU]),tmpz([mldD,mldU]),0);
+        
+        if mldD == length(tmp)
+            mld(j) = NaN; % mld is shallower than fisrt level, unresolvable here
+        else
+            mld(j) = -interp1(tmp(mldD:mldD+1),tmpz(mldD:mldD+1),0);
+        end
     end
 end
 
