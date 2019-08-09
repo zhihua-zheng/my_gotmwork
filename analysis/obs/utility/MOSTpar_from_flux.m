@@ -41,14 +41,17 @@ switch casename
         moor_dir  = [my_root,'OCSP/Mooring/'];
         wave_dir  = [my_root,'OCSP/CDIP/'];
         Fname     = fullfile(moor_dir,'ocsp_flux_hrPMEL.mat');
-        DWSname   = fullfile(wave_dir,'Wave_2010.mat');
+        Wname     = fullfile(wave_dir,'ocsp_wave.mat');
         waterType = 4;
         lat       = 50.1;
         lon       = 144.9;
         
     case 'SPURSI'
         moor_dir  = [my_root,'SPURSI/Mooring/'];
+        wave_dir  = [my_root,'SPURSI/DWS/'];
         Fname     = fullfile(moor_dir,'spursi_flux_hrUOP.mat');
+%       Fname     = fullfile(moor_dir,'spursi_flux_hr.mat');
+        Wname     = fullfile(wave_dir,'spursi_wave.mat');
         waterType = 1;
         lat       = 24.5811;
         lon       = 38;
@@ -56,7 +59,6 @@ end
 
 M = load(Fname);
 
-% datm_inq = datetime(t_inq,'ConvertFrom','datenum');
 % dvec_inq = datevec(datestr(t_inq));
 % yr  = dvec_inq(:,1);
 % mon = dvec_inq(:,2);
@@ -79,12 +81,11 @@ g      = 9.81;
 ntm   = length(idatm);
 index = isbetween(M.SF.datm,idatm(1),idatm(ntm));
 SF    = M.SF(index,:);
-% SF  = retime(SF,'regular','mean','TimeStep',hours(3));
 
 % find night time indices based on solar radiation, excluding transition
 % periods (edges)
 
-mNSW   = mode(SF.nsw);
+mNSW   = mode(SF.nsw); % night time nsw
 allN   = find(SF.nsw < mNSW + .3);
 dallN  = diff(allN);
 Nredge = [find(dallN>1); length(allN)]; % right edge indices
@@ -92,15 +93,31 @@ Nledge = [1;          find(dallN>1)+1]; % left  edge indices
 Nedge  = union(Nredge,Nledge);
 Ninter = setdiff(1:length(allN),Nedge);
 
-FS.Inighte = allN(Nedge);
-FS.Inighti = allN(Ninter);
+FS.Inighte = ismember(1:ntm,allN(Nedge))';
+FS.Inighti = ismember(1:ntm,allN(Ninter))';
+FS.Idayi   = not(ismember(1:ntm,allN))';
 
 % plot(SF.datm,SF.nsw);hold on;
+% plot(SF.datm(FS.Idayi),SF.nsw(FS.Idayi),'.')
 % plot(SF.datm(FS.Inighte),SF.nsw(FS.Inighte),'.');axis tight
 
 % [rhr,rmin,shr,smin] = sunrise(mon,da,yr,lat,lon);
 % srise = datetime(yr,mon,da,rhr-1,0,0);
 % sset  = datetime(yr,mon,da,shr+1,0,0);
+
+% season separation
+idvec      = datevec(idatm);
+FS.Iwinter = idvec(:,2) == 12 | idvec(:,2) == 1  | idvec(:,2) == 2;
+FS.Ispring = idvec(:,2) == 3  | idvec(:,2) == 4  | idvec(:,2) == 5;
+FS.Isummer = idvec(:,2) == 6  | idvec(:,2) == 7  | idvec(:,2) == 8;
+FS.Iautumn = idvec(:,2) == 9  | idvec(:,2) == 10 | idvec(:,2) == 11;
+
+% season vector
+FS.Vseason             = zeros(ntm,1);
+FS.Vseason(FS.Iautumn) = 1;
+FS.Vseason(FS.Iwinter) = 2;
+FS.Vseason(FS.Ispring) = 3;
+FS.Vseason(FS.Isummer) = 4;
 
 %% T-S dependent coefficients
 
@@ -132,8 +149,8 @@ w_b_0     =  g*(alpha.*w_theta_0 - beta.*w_s_0); % <w'b'> [m^2/s^3]
 
 %% Fluxes due to non-turbulent processes
 
-z1      = zz(1);
-z2      = zz(2);
+z1      = zz(1); % upper level
+z2      = zz(2); % lower level
 zdum    = linspace(z2,z1)'; % dummy variable for integration
 band_SR = 9; % solar radiation band model
 
@@ -169,7 +186,7 @@ w_b_r     =  g*avm(w_theta_r,alpha');
 % buoyancy forcing
 FS.Bf = -ava(w_b_r,w_b_0');
 
-% friction scales
+% surface layer scales
 FS.Ustar =  sqrt(SF.tau/rho0);
 FS.Sstar = -w_s_0 ./ FS.Ustar / kappa;
 FS.Tstar = -avd( ava(w_theta_r,w_theta_0'), FS.Ustar') / kappa;
@@ -177,18 +194,19 @@ FS.Bstar = -avd( ava(w_b_r,    w_b_0'    ), FS.Ustar') / kappa;
 
 if exist('sld','var')
     
-    DWS = load(DWSname);
-    WQ  = retime(DWS.WQ,datm_inq,'linear');
-    zSt = (-30:.2:0)';
+    W     = load(Wname);
+    index = isbetween(W.SD.datm,idatm(1),idatm(ntm));
+    SD    = W.SD(index,:);
     
-    [uSt,vSt] = St_from_dws(WQ,DWS.wave_freq,DWS.wave_bw,zSt);
-    FS.SD_sl  = get_St_SL(uSt,vSt,zSt,sld);
+    % surface layer averaged Stokes drift
+    FS.USt_sl = get_St_SL(SD.uSt',SD.vSt',W.zSt,sld);
     
     % Obukhov-Langmuir length [m]
-    Lo = FS.Ustar.^2 .* FS.SD_sl' ./ Bf / kappa;
-else
-    Lo = avm(1./FS.Bf, FS.Ustar'.^3) / kappa; % Obukhov length [m]
+%     Lo = FS.Ustar.^2 .* FS.USt_sl' ./ Bf / kappa;
 end
+
+% Obukhov length [m]
+Lo = avm(1./FS.Bf, FS.Ustar'.^3) / kappa;
 
 % stability parameter
 zeta = abs(repmat(zdum,1,ntm)) ./ Lo;
