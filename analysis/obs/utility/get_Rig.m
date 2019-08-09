@@ -4,7 +4,7 @@ function Rig = get_Rig(Bzz,Ustar,zz)
 %==========================================================================
 %
 % USAGE:
-%  Rig get_Rig(Bprof,Ustar,zz)
+%  Rig = get_Rig(Bprof,Ustar,zz)
 %
 % DESCRIPTION:
 %  Compute nondimensional gradient Richardson number at middle level

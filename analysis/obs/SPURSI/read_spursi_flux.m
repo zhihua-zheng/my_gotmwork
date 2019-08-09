@@ -1,9 +1,7 @@
-
-
 %% read_spursi_flux
-
+%
 % Read computed air-sea fluxes for SPURS-I, rainfall data is missing
-
+%
 % Zhihua Zheng, UW-APL, July 17 2019
 
 %% General setting
